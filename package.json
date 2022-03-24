@@ -4,6 +4,7 @@
   "main": "index.js",
   "author": "Keith Frazier <keithers98@gmail.com>",
   "license": "MIT",
+  "scripts": {},
   "devDependencies": {
     "typescript": "^4.6.2"
   }
