@@ -480,13 +480,3 @@ export default class Pathfinder {
   }
 }
 
-const matic = new Pathfinder(246);
-
-matic
-  .getTokenPath({
-    tokenInAddress: "0x593122aae80a6fc3183b2ac0c4ab3336debee528",
-    tokenOutAddress: "0x9dad43ee9e09837aeaca21799c88613e8e7c67dd",
-    IN: true,
-  })
-  .then(console.log)
-  .catch(console.error);
