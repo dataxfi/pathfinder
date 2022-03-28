@@ -93,7 +93,7 @@ export default class Pathfinder {
 
     return new Promise(async (resolve, reject) => {
       if (this.tokensChecked.has(tokenAddress)) resolve(null);
-      let leaves;
+      let leaves: IPoolNode[];
       try {
         if (IN) {
           leaves = await this.fetchFunction(tokenAddress);
@@ -101,6 +101,9 @@ export default class Pathfinder {
           leaves = await this.fetchFunction(tokenAddress, amt);
         }
 
+        if (leaves.length === 0) {
+          throw new Error("There are no pools for " + tokenAddress + " on this chain.");
+        }
         //iterate pools response adding nodes and edges
         for (let i = 0; i < leaves.length; i++) {
           const poolNode = leaves[i];
@@ -189,7 +192,7 @@ export default class Pathfinder {
       }
       return nextTokensToSearch;
     } catch (error) {
-      console.error(error);
+      throw error;
     }
   }
 
@@ -223,7 +226,7 @@ export default class Pathfinder {
 
       try {
         const nextTokensToSearch = await this.getNextTokensToSearch({ tokenInAddress, tokenOutAddress, parentPoolAddress, amt, IN });
-        if (nextTokensToSearch) {
+        if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
           for (let [token, value] of Object.entries(nextTokensToSearch)) {
             resolve(this.getTokenPath({ tokenOutAddress, tokenInAddress: token, parentPoolAddress: value.parent, amt: value.amt, IN }));
           }
@@ -273,7 +276,6 @@ export default class Pathfinder {
     results.forEach((obj: {}) => {
       allResults = { ...allResults, ...obj };
     });
-    let matches: IBFSResults = {};
     let bestPath = [];
 
     function getNextToken(parent: IBFSResultPoolNode, currentPool: IBFSResultPoolNode, currPath, lastToken) {
@@ -285,7 +287,7 @@ export default class Pathfinder {
       }
 
       if (parent.parent === parent.pool.poolAddress) {
-        currPath.unshift(start);
+        if (currPath[0] !== start) currPath.unshift(start);
         if (bestPath.length <= currPath.length) bestPath = currPath;
         return;
       }
@@ -316,6 +318,7 @@ export default class Pathfinder {
     } = response;
 
     const allData = [...t0isOcean, ...t1isOcean];
+
     const edges = new Set(allData.map((poolData) => poolData.id));
 
     return allData.map((pool) => ({
@@ -358,6 +361,9 @@ export default class Pathfinder {
       token0{
         id
       }
+
+      totalValueLockedToken0:reserve0
+      totalValueLockedToken1:reserve1
     }
     
     t1isOcean: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
@@ -370,10 +376,10 @@ export default class Pathfinder {
       token1 {
         id
       }
+      
+      totalValueLockedToken0:reserve0
+      totalValueLockedToken1:reserve1
     }
-
-    totalValueLockedToken0:reserve0
-    totalValueLockedToken1:reserve1
   }
   `;
   }
@@ -454,7 +460,7 @@ export default class Pathfinder {
    */
 
   private async maticPools(address: string, amt: string = "0.001") {
-    return this.uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon", address, amt);
+    return this.otherChainsReq("https://polygon.furadao.org/subgraphs/name/quickswap", address, amt);
   }
   /**
    * Returns set of all pools which contain provided address from mainnet (1)
@@ -483,3 +489,14 @@ export default class Pathfinder {
     return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }
+
+const matic = new Pathfinder(137);
+
+matic
+  .getTokenPath({
+    tokenInAddress: "0x282d8efce846a88b159800bd4130ad77443fa1a1",
+    tokenOutAddress: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    IN: true,
+  })
+  .then(console.log)
+  .catch(console.error);
