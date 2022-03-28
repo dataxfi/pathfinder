@@ -59,7 +59,7 @@ export default class Pathfinder {
         this.fetchFunction = this.moonriverPools;
         break;
       case 1285:
-        this.fetchFunction = this.energyWebPools;
+        this.fetchFunction = this.energywebPools;
         break;
       default:
         this.fetchFunction = this.mainnetPools;
@@ -195,7 +195,7 @@ export default class Pathfinder {
 
   /**
    * Gets token path for a swap pair.
-   * @param param0 
+   * @param param0
    * @returns An array of tokens to be traded in order to route to the destination token, optimised to be the shortes path possible.
    */
   public async getTokenPath({
@@ -231,7 +231,7 @@ export default class Pathfinder {
 
         if (this.pendingQueries.size === 0) {
           const results: IBFSResults[] = this.breadthSearchGraph(tokenOutAddress);
-          const path:string[] = this.constructPath(results, this.userTokenIn, this.userTokenOut);
+          const path: string[] = this.constructPath(results, this.userTokenIn, this.userTokenOut);
           resolve(path);
         }
       } catch (error) {
@@ -302,24 +302,40 @@ export default class Pathfinder {
     }
     return bestPath;
   }
+  // {
+  //     poolAddress,
+  //     t1Address,
+  //     t2Address,
+  //     t1Liquidity,
+  //     t2Liquidity,
+  //     edges,
+  //   }: {
+  //     poolAddress: string;
+  //     t1Address: string;
+  //     t2Address: string;
+  //     t1Liquidity: string;
+  //     t2Liquidity: string;
+  //     edges?: Set<string>;
+  //   }
 
-  private formatter({
-    poolAddress,
-    t1Address,
-    t2Address,
-    t1Liquidity,
-    t2Liquidity,
-    edges,
-  }: {
-    poolAddress: string;
-    t1Address: string;
-    t2Address: string;
-    t1Liquidity: string;
-    t2Liquidity: string;
-    edges?: Set<string>;
-  }) {
-    if (!edges) edges = new Set();
-    return { poolAddress, t1Address, t2Address, t1Liquidity, t2Liquidity, edges };
+  private formatter(response: any) {
+    const {
+      data: {
+        data: { t0isOcean, t1isOcean },
+      },
+    } = response;
+
+    const allData = [...t0isOcean, ...t1isOcean];
+    const edges = new Set(allData.map((poolData) => poolData.id));
+
+    return allData.map((pool) => ({
+      poolAddress: pool.id,
+      t1Address: pool.token0.id,
+      t2Address: pool.token1.id,
+      t1Liquidity: pool.totalValueLockedToken0,
+      t2Liquidity: pool.totalValueLockedToken1,
+      edges,
+    }));
   }
 
   /**
@@ -329,12 +345,58 @@ export default class Pathfinder {
    */
 
   private async rinkebyPools(address: string) {}
-  /**
-   * Returns set of all pools which contain provided address
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
+
+
+    /**
+   * Builds and returns uniswap query
+   * @param address 
+   * @param amt 
+   * @param first 
+   * @param skip 
+   * @returns a query as a string
    */
-  private async energyWebPools(address: string) {}
+
+  private otherChainsQuery(address: string, amt: string, first: number = 100, skip: number = 0) {
+    return `
+  query {
+    t0isOcean: pairs(first:${first} skip:${skip} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
+    orderBy:reserveUSD
+    orderDirection:desc){
+        id
+      token1{
+        id
+      }
+      token0{
+        id
+      }
+    }
+    
+    t1isOcean: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
+    orderBy:reserveUSD
+    orderDirection:desc){
+        id
+      token0{
+        id
+      } 
+      token1 {
+        id
+      }
+    }
+
+    totalValueLockedToken0:reserve0
+    totalValueLockedToken1:reserve1
+  }
+  `;
+  }
+
+  /**
+   * Builds and returns uniswap query
+   * @param address 
+   * @param amt 
+   * @param first 
+   * @param skip 
+   * @returns a query as a string
+   */
 
   private uniswapQuery(address: string, amt: string, first: number = 100, skip: number = 0) {
     const generalReq = `orderBy: totalValueLockedUSD
@@ -361,96 +423,77 @@ export default class Pathfinder {
     }`;
   }
 
-  private async uniswapSchemaReq(url: string, address: string, amt?: string) {
-    if (!amt) amt = "0.001";
+  /**
+   * Returns an axios response from the url provided.
+   * @param address
+   * @param amt - token amount to be swapped. Pools with less than are excluded
+   */
+  private async otherChainsReq(url: string, address: string, amt: string = "0.001") {
+    const response = await axios.post(url, {
+      query: this.otherChainsQuery(address, amt),
+    });
+
+    return this.formatter(response);
+  }
+
+  /**
+   * Returns an axios response from the url provided.
+   * @param address
+   * @param amt - token amount to be swapped. Pools with less than are excluded
+   */
+  private async uniswapSchemaReq(url: string, address: string, amt: string = "0.001") {
     const uniswap = await axios.post(url, {
       query: this.uniswapQuery(address, amt),
     });
-    const {
-      data: {
-        data: { t0isOcean, t1isOcean },
-      },
-    } = uniswap;
-    const allData = [...t0isOcean, ...t1isOcean];
-    const edges = new Set(allData.map((poolData) => poolData.id));
 
-    return allData.map((pool) =>
-      this.formatter({
-        poolAddress: pool.id,
-        t1Address: pool.token0.id,
-        t2Address: pool.token1.id,
-        t1Liquidity: pool.totalValueLockedToken0,
-        t2Liquidity: pool.totalValueLockedToken1,
-        edges,
-      })
-    );
+    return this.formatter(uniswap);
   }
 
+
   /**
-   * Returns set of all pools which contain provided address
+   * Returns set of all pools which contain provided address from Energyweb chain (246)
+   * @param address
+   * @param amt - token amount to be swapped. Pools with less than are excluded
+   */
+  private async energywebPools(address: string, amt: string = "0.001") {
+    return this.otherChainsReq("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt);
+  }
+
+
+  /**
+   * Returns set of all pools which contain provided address from matic chain (137)
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
 
-  private async maticPools(address: string, amt?: string) {
+  private async maticPools(address: string, amt: string = "0.001") {
     return this.uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon", address, amt);
   }
   /**
-   * Returns set of all pools which contain provided address
+   * Returns set of all pools which contain provided address from mainnet (1)
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
-  private async mainnetPools(address: string, amt: string) {
+  private async mainnetPools(address: string, amt: string = "0.001") {
     return this.uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", address, amt);
   }
+
+
   /**
-   * Returns set of all pools which contain provided address
+   * Returns set of all pools which contain provided address from bsc chain (56)
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
-  private async bscPools(address: string, amt: string) {
-    const pancake = axios.post("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", {
-      query: `query{
-          t0isOcean: pairs(where:{token0_contains:"${address}"}){
-            id
-            token1{
-              symbol
-            }
-          }
-          
-          t1isOcean: pairs(where:{token1_contains:"${address}"}){
-            id
-            token0{
-              symbol
-            }
-          }
-        }
-        
-        `,
-    });
+  private async bscPools(address: string, amt: string = "0.001") {
+    return this.otherChainsReq("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt)
   }
 
   /**
-   * Returns set of all pools which contain provided address
+   * Returns set of all pools which contain provided address from moonriver chain (1285)
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
-  private async moonriverPools(address: string, amt: string) {
-    const solarbeam = await axios.post("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", {
-      query: `query {
-          t0isOcean: pairs(where:{token0_contains:"${address}"}){
-            token1{
-              name
-            }
-          }
-          
-          t1isOcean: pairs(where:{token1_contains:"${address}"}){
-            token0{
-              name
-            }
-          }
-        }`,
-    });
+  private async moonriverPools(address: string, amt: string = "0.001") {
+    return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt)
   }
 }
-
