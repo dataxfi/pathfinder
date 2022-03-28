@@ -55,10 +55,10 @@ export default class Pathfinder {
       case 56:
         this.fetchFunction = this.bscPools;
         break;
-      case 246:
+      case 1285:
         this.fetchFunction = this.moonriverPools;
         break;
-      case 1285:
+      case 246:
         this.fetchFunction = this.energywebPools;
         break;
       default:
@@ -278,34 +278,24 @@ export default class Pathfinder {
     });
     let bestPath = [];
 
-    function getNextToken(parent: IBFSResultPoolNode, currentPool: IBFSResultPoolNode, currPath, lastToken) {
-      currPath.unshift(lastToken);
-      if (parent.pool.t1Address === lastToken) {
-        lastToken = parent.pool.t2Address;
-      } else {
-        lastToken = parent.pool.t1Address;
-      }
+    function getNextToken(value: IBFSResultPoolNode, currPath: string[], otherToken?: string) {
+      if (otherToken) currPath.push(otherToken);
 
-      if (parent.parent === parent.pool.poolAddress) {
-        if (currPath[0] !== start) currPath.unshift(start);
-        if (bestPath.length <= currPath.length) bestPath = currPath;
+      if (value.pool.t1Address === destination || value.pool.t2Address === destination) {
+        currPath.push(destination);
+        if (bestPath.length === 0 || bestPath.length > currPath.length) bestPath = currPath;
         return;
+      } else {
+        //the correct path is somewhere else in the data
+        if (value.pool.t1Address === otherToken || value.pool.t2Address === otherToken) return;
+        const nextOtherToken = value.pool.t1Address === start ? value.pool.t2Address : value.pool.t1Address;
+        getNextToken(allResults[value.parent], currPath, nextOtherToken);
       }
-
-      getNextToken(allResults[parent.parent], parent, currPath, lastToken);
     }
 
     for (const [key, value] of Object.entries(allResults)) {
-      const path = [];
-      if (value.pool.t1Address === destination) {
-        path.push(value.pool.t1Address);
-        const parent = allResults[value.parent];
-        getNextToken(parent, value, path, value.pool.t2Address);
-      } else if (value.pool.t2Address === destination) {
-        bestPath.push(value.pool.t2Address);
-        const parent = allResults[value.parent];
-        getNextToken(parent, value, path, value.pool.t1Address);
-      }
+      const path: string[] = [start];
+      getNextToken(value, path);
     }
     return bestPath;
   }
@@ -490,12 +480,12 @@ export default class Pathfinder {
   }
 }
 
-const matic = new Pathfinder(137);
+const matic = new Pathfinder(246);
 
 matic
   .getTokenPath({
-    tokenInAddress: "0x282d8efce846a88b159800bd4130ad77443fa1a1",
-    tokenOutAddress: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    tokenInAddress: "0x593122aae80a6fc3183b2ac0c4ab3336debee528",
+    tokenOutAddress: "0x9dad43ee9e09837aeaca21799c88613e8e7c67dd",
     IN: true,
   })
   .then(console.log)

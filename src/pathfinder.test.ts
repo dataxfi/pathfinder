@@ -1,6 +1,6 @@
 import Pathfinder from "./pathfinder";
 
-describe("Pathfinder works for all chains", () => {
+describe("Pathfinder works for all chains when supplying exact IN to out pair.", () => {
   it("Pathfinder works on mainnet", async () => {
     const pathfinder = new Pathfinder(1);
     const path = await pathfinder.getTokenPath({
