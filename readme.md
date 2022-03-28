@@ -70,6 +70,12 @@ Gets token path for a swap pair. Returns an array of tokens to be traded in orde
   }): Promise<string[]>
   ```
 
+nodes
+
+The node graph being built by getPoolsForToken()
+
+`pathfinder.nodes`
+
 ## Limitations 
 Currently the subgraphs being queried are all subgraphs from the most popular dex's on supportedChains:
 

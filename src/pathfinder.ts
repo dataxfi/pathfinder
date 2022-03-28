@@ -27,8 +27,8 @@ type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246"
 
 export default class Pathfinder {
   private fetchFunction;
-  private nodes: PoolGraph;
-  private tokensChecked: Set<string>;
+  public nodes: PoolGraph;
+  public tokensChecked: Set<string>;
   private pendingQueries: Set<string>;
   private rootPools: string[];
   private userTokenIn: string;
@@ -232,6 +232,11 @@ export default class Pathfinder {
         if (this.pendingQueries.size === 0) {
           const results: IBFSResults[] = this.breadthSearchGraph(tokenOutAddress);
           const path: string[] = this.constructPath(results, this.userTokenIn, this.userTokenOut);
+          this.nodes = {};
+          this.tokensChecked = new Set();
+          this.rootPools = [];
+          this.userTokenIn = "";
+          this.userTokenOut = "";
           resolve(path);
         }
       } catch (error) {
@@ -302,21 +307,6 @@ export default class Pathfinder {
     }
     return bestPath;
   }
-  // {
-  //     poolAddress,
-  //     t1Address,
-  //     t2Address,
-  //     t1Liquidity,
-  //     t2Liquidity,
-  //     edges,
-  //   }: {
-  //     poolAddress: string;
-  //     t1Address: string;
-  //     t2Address: string;
-  //     t1Liquidity: string;
-  //     t2Liquidity: string;
-  //     edges?: Set<string>;
-  //   }
 
   private formatter(response: any) {
     const {
@@ -346,13 +336,12 @@ export default class Pathfinder {
 
   private async rinkebyPools(address: string) {}
 
-
-    /**
+  /**
    * Builds and returns uniswap query
-   * @param address 
-   * @param amt 
-   * @param first 
-   * @param skip 
+   * @param address
+   * @param amt
+   * @param first
+   * @param skip
    * @returns a query as a string
    */
 
@@ -391,10 +380,10 @@ export default class Pathfinder {
 
   /**
    * Builds and returns uniswap query
-   * @param address 
-   * @param amt 
-   * @param first 
-   * @param skip 
+   * @param address
+   * @param amt
+   * @param first
+   * @param skip
    * @returns a query as a string
    */
 
@@ -449,7 +438,6 @@ export default class Pathfinder {
     return this.formatter(uniswap);
   }
 
-
   /**
    * Returns set of all pools which contain provided address from Energyweb chain (246)
    * @param address
@@ -458,7 +446,6 @@ export default class Pathfinder {
   private async energywebPools(address: string, amt: string = "0.001") {
     return this.otherChainsReq("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt);
   }
-
 
   /**
    * Returns set of all pools which contain provided address from matic chain (137)
@@ -478,14 +465,13 @@ export default class Pathfinder {
     return this.uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", address, amt);
   }
 
-
   /**
    * Returns set of all pools which contain provided address from bsc chain (56)
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async bscPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt)
+    return this.otherChainsReq("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt);
   }
 
   /**
@@ -494,6 +480,6 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async moonriverPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt)
+    return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }
