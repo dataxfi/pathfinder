@@ -197,6 +197,11 @@ export class Pathfinder {
     }
   }
 
+  /**
+   * Gets token path for a swap pair.
+   * @param param0 
+   * @returns An array of tokens to be traded in order to route to the destination token, optimised to be the shortes path possible.
+   */
   public async getTokenPath({
     tokenInAddress,
     tokenOutAddress,
@@ -211,7 +216,7 @@ export class Pathfinder {
     parentPoolAddress?: string;
     amt?: string;
     abortSignal?: AbortSignal;
-  }): Promise<{}> {
+  }): Promise<string[]> {
     if (!this.userTokenIn) this.userTokenIn = tokenInAddress;
     if (!this.userTokenOut) this.userTokenOut = tokenOutAddress;
 
@@ -230,7 +235,7 @@ export class Pathfinder {
 
         if (this.pendingQueries.size === 0) {
           const results: IBFSResults[] = this.breadthSearchGraph(tokenOutAddress);
-          const path = this.constructPath(results, this.userTokenIn, this.userTokenOut);
+          const path:string[] = this.constructPath(results, this.userTokenIn, this.userTokenOut);
           resolve(path);
         }
       } catch (error) {
@@ -452,49 +457,3 @@ export class Pathfinder {
     });
   }
 }
-
-const OCEANUSDC = new Pathfinder(1);
-try {
-  const response = OCEANUSDC.getTokenPath({
-    tokenInAddress: "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
-    tokenOutAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    IN: true,
-  });
-} catch (error) {
-  console.log("An error occured.");
-}
-//matic balancer
-//   const balancer = await axios.post("https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2", {
-//     query: `query{
-//         pools (where:{tokensList_contains:["${address}"]}){
-//           tokens{
-//             address
-//             balance
-//           }
-//         }
-//       }`,
-//   });
-
-//   const poolsWEnoughLiquidity = balancer.data.pools
-//     .filter((pool: { tokens: any[] }) => pool.tokens.find((token) => token.address === address && Number(token.balance) > Number(amt)))
-//     .map((pool: any) =>
-//       formatter(
-//         pool.address,
-//         pool.tokens.find((token:any) => token.address === address)
-//       )
-//     );
-
-// const formattedUniswapPools = uniswap.map((pool)=>{formatter<...>})
-
-//mainnet balancer
-// const balancer = axios.post("https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2", {
-//   query: `query{
-//       pools (where:{tokensList_contains:["${address}"]}){
-//           address
-//         tokens{
-//           address
-//           balance
-//         }
-//       }
-//     }`,
-// });
