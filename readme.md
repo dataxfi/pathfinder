@@ -16,6 +16,15 @@ try {
 }
 ```
 
+output
+```
+[
+  '0x967da4048cd07ab37855c090aaf366e4ce1b9f48',
+  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+]
+```
+
 ### API
 
 getPoolsForToken
@@ -60,3 +69,14 @@ Gets token path for a swap pair. Returns an array of tokens to be traded in orde
     abortSignal?: AbortSignal;
   }): Promise<string[]>
   ```
+
+## Limitations 
+Currently the subgraphs being queried are all subgraphs from the most popular dex's on supportedChains:
+
+- uniswap (mainnet)
+- quickswap (matic)
+- carbonswap (EWT)
+- pankackeswap (BSC)
+- solarbeam (moonriver)
+
+But there are other pools that are available. Apps like balancer use different pools and subgraphs, and support for these could potentially be added in the future. 

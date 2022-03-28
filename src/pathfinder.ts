@@ -25,7 +25,7 @@ interface IBFSResults {
 
 type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246" | 1285 | "1285";
 
-export class Pathfinder {
+export default class Pathfinder {
   private fetchFunction;
   private nodes: PoolGraph;
   private tokensChecked: Set<string>;
@@ -140,8 +140,6 @@ export class Pathfinder {
         }
 
         this.tokensChecked.add(tokenAddress);
-
-        // fs.writeFileSync("/Users/keith/Development/pathfinder/src/nextTokens.json", JSON.stringify(nextTokensToSearch));
         resolve(nextTokensToSearch);
       } catch (error) {
         console.error(error);
@@ -189,8 +187,6 @@ export class Pathfinder {
         });
         this.pendingQueries.delete(tokenOutAddress);
       }
-      console.log(nextTokensToSearch);
-
       return nextTokensToSearch;
     } catch (error) {
       console.error(error);
@@ -457,3 +453,4 @@ export class Pathfinder {
     });
   }
 }
+
