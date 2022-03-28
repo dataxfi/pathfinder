@@ -1,4 +1,3 @@
-const fs = require("fs");
 const axios = require("axios");
 interface IPoolNode {
   poolAddress: string;
@@ -14,6 +13,14 @@ interface INextTokensToSearch {
 
 interface PoolGraph {
   [key: string]: IPoolNode;
+}
+
+interface IBFSResultPoolNode {
+  pool: IPoolNode;
+  parent: string;
+}
+interface IBFSResults {
+  [key: string]: IBFSResultPoolNode;
 }
 
 type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246" | 1285 | "1285";
@@ -123,7 +130,6 @@ export class Pathfinder {
           this.addPoolNode(poolNode);
 
           if (parentPoolAddress) {
-            fs.writeFileSync("/Users/keith/Development/pathfinder/src/results.json", JSON.stringify(this.nodes));
             //add edge to parent
             this.nodes[parentPoolAddress].edges.add(poolNode.poolAddress);
             //add edge from parent to new node
@@ -136,7 +142,6 @@ export class Pathfinder {
         this.tokensChecked.add(tokenAddress);
 
         // fs.writeFileSync("/Users/keith/Development/pathfinder/src/nextTokens.json", JSON.stringify(nextTokensToSearch));
-        fs.writeFileSync("/Users/keith/Development/pathfinder/src/nodes.json", JSON.stringify(this.nodes));
         resolve(nextTokensToSearch);
       } catch (error) {
         console.error(error);
@@ -184,6 +189,8 @@ export class Pathfinder {
         });
         this.pendingQueries.delete(tokenOutAddress);
       }
+      console.log(nextTokensToSearch);
+
       return nextTokensToSearch;
     } catch (error) {
       console.error(error);
@@ -221,46 +228,80 @@ export class Pathfinder {
           }
         }
 
-        if (this.pendingQueries.size === 0)
-          if (IN) {
-            const results = this.breadthSearchGraph(tokenOutAddress);
-            resolve(results);
-          } else {
-            const results = this.breadthSearchGraph(tokenInAddress);
-            resolve(results);
-          }
+        if (this.pendingQueries.size === 0) {
+          const results: IBFSResults[] = this.breadthSearchGraph(tokenOutAddress);
+          const path = this.constructPath(results, this.userTokenIn, this.userTokenOut);
+          resolve(path);
+        }
       } catch (error) {
         reject(error);
       }
     });
   }
 
-  private async breadthSearchGraph(destination: string): Promise<{}> {
-    const searches: {}[] = this.rootPools.map((poolAddress) => {
+  private breadthSearchGraph(destination: string): IBFSResults[] {
+    const searches: IBFSResults[] = this.rootPools.map((poolAddress) => {
       let queue = [poolAddress];
       const visitedNodes = {};
       visitedNodes[poolAddress] = null;
       while (queue.length > 0) {
         const currentPoolAddress = queue.shift();
         const pool = this.nodes[currentPoolAddress];
-        pool.edges.forEach((pool) => {
-          if (!visitedNodes[pool]) {
-            visitedNodes[pool] = currentPoolAddress;
-            queue.push(pool);
+        pool.edges.forEach((poolAddress) => {
+          if (!visitedNodes[poolAddress]) {
+            visitedNodes[poolAddress] = { pool: this.nodes[poolAddress], parent: currentPoolAddress };
+            queue.push(poolAddress);
           }
         });
         if (pool.t1Address === destination || pool.t2Address === destination) {
-          console.log("desitnation found");
           return visitedNodes;
         }
       }
     });
 
-    fs.writeFileSync("/Users/keith/Development/pathfinder/src/BFSResults.json", JSON.stringify(searches));
     return searches;
   }
 
-  private constructPath() {}
+  private constructPath(results: IBFSResults[], start: string, destination: string) {
+    let allResults: IBFSResults;
+    results.forEach((obj: {}) => {
+      allResults = { ...allResults, ...obj };
+    });
+    let matches: IBFSResults = {};
+    let bestPath = [];
+
+    function getNextToken(parent: IBFSResultPoolNode, currentPool: IBFSResultPoolNode, currPath, lastToken) {
+      currPath.unshift(lastToken);
+      if (parent.pool.t1Address === lastToken) {
+        lastToken = parent.pool.t2Address;
+      } else {
+        lastToken = parent.pool.t1Address;
+      }
+
+      if (parent.parent === parent.pool.poolAddress) {
+        currPath.unshift(start);
+        if (bestPath.length <= currPath.length) bestPath = currPath;
+        return;
+      }
+
+      getNextToken(allResults[parent.parent], parent, currPath, lastToken);
+    }
+
+    for (const [key, value] of Object.entries(allResults)) {
+      const path = [];
+      if (value.pool.t1Address === destination) {
+        path.push(value.pool.t1Address);
+        const parent = allResults[value.parent];
+        getNextToken(parent, value, path, value.pool.t2Address);
+      } else if (value.pool.t2Address === destination) {
+        bestPath.push(value.pool.t2Address);
+        const parent = allResults[value.parent];
+        getNextToken(parent, value, path, value.pool.t1Address);
+      }
+    }
+    return bestPath;
+  }
+
   private formatter({
     poolAddress,
     t1Address,
@@ -294,9 +335,11 @@ export class Pathfinder {
    */
   private async energyWebPools(address: string) {}
 
-  private uniswapExtendedQuery(address: string, amt: string) {
-    return `query {
-      t0isOcean: pools(where:{token0_contains:"${address}", totalValueLockedToken0_gt:"${amt}"} ){
+  private uniswapQuery(address: string, amt: string, first: number = 100, skip: number = 0) {
+    const generalReq = `orderBy: totalValueLockedUSD
+    orderDirection: desc
+    subgraphError: allow
+  ){
       id
       token1{
         id
@@ -304,38 +347,23 @@ export class Pathfinder {
       token0{
         id
       }
-      totalValueLockedToken0
-      totalValueLockedToken1
-    }
-    t1isOcean: pools(where:{token1_contains:"${address}", totalValueLockedToken1_gt:"${amt}"} ){
-      id
-      token0{
-        id
-      }
-      token1{
-        id
-      }
-      totalValueLockedToken0
-      totalValueLockedToken1
-    }
-  }`;
-  }
+    }`;
 
-  private uniswapPoolIdsQuery(address: string, amt: string) {
     return `query {
-      t0isOcean: pools(where:{token0_contains:"${address}", volumeToken0_gt:"${amt}"} ){
-      id
-    }
-    t1isOcean: pools(where:{token1_contains:"${address}", volumeToken1_gt:"${amt}"} ){
-      id
-    }
-  }`;
+      t0isOcean: pools(first:${first} skip:${skip} where:{token0_in:["${address}"],
+      totalValueLockedToken0_gt:"${amt}"}     
+      ${generalReq}
+      
+      t1isOcean: pools(first:${first} skip:${skip} where:{token1_in:["${address}"], 
+      totalValueLockedToken1_gt:"${amt}"}   
+      ${generalReq}
+    }`;
   }
 
   private async uniswapSchemaReq(url: string, address: string, amt?: string) {
     if (!amt) amt = "0.001";
     const uniswap = await axios.post(url, {
-      query: this.uniswapExtendedQuery(address, amt),
+      query: this.uniswapQuery(address, amt),
     });
     const {
       data: {
@@ -432,7 +460,6 @@ try {
     tokenOutAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     IN: true,
   });
-  fs.writeFileSync("/Users/keith/Development/pathfinder/src/results.json", JSON.stringify(response));
 } catch (error) {
   console.log("An error occured.");
 }
