@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "yarn tsc",
-    "test": "yarn jest"
+    "test": "yarn jest --detectOpenHandles"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",

@@ -171,28 +171,26 @@ export default class Pathfinder {
    * @returns next tokens to search
    */
   private async getNextTokensToSearch({
-    tokenInAddress,
-    tokenOutAddress,
+    tokenAddress,
+    destinationAddress,
     parentTokenAddress,
     amt,
     IN,
   }: {
-    tokenInAddress: string;
-    tokenOutAddress: string;
+    tokenAddress: string;
+    destinationAddress: string;
     IN: boolean;
     parentTokenAddress?: string;
     amt?: string;
   }): Promise<INextTokensToSearch> {
     let nextTokensToSearch: INextTokensToSearch | null;
-    let tokenAddress = IN ? tokenInAddress : tokenOutAddress;
-    let destinationAddress = IN ? tokenOutAddress : tokenInAddress;
     try {
       // call with recursive values for in
       if (this.pendingQueries.has(tokenAddress)) return;
       this.pendingQueries.add(tokenAddress);
       nextTokensToSearch = await this.getPoolsForToken({
-        tokenAddress: tokenAddress,
-        destinationAddress: destinationAddress,
+        tokenAddress,
+        destinationAddress,
         IN,
         parentTokenAddress,
         amt,
@@ -211,22 +209,22 @@ export default class Pathfinder {
    * @returns An array of tokens to be traded in order to route to the destination token in the shortest path possible.
    */
   public async getTokenPath({
-    tokenInAddress,
-    tokenOutAddress,
+    tokenAddress,
+    destinationAddress,
     parentTokenAddress,
     amt,
     abortSignal,
     IN,
   }: {
-    tokenInAddress: string;
-    tokenOutAddress: string;
+    tokenAddress: string;
+    destinationAddress: string;
     IN: boolean;
     parentTokenAddress?: string;
     amt?: string;
     abortSignal?: AbortSignal;
   }): Promise<string[]> {
-    if (!this.userTokenIn) this.userTokenIn = tokenInAddress;
-    if (!this.userTokenOut) this.userTokenOut = tokenOutAddress;
+    if (!this.userTokenIn) this.userTokenIn = tokenAddress;
+    if (!this.userTokenOut) this.userTokenOut = destinationAddress;
 
     return new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
@@ -234,10 +232,10 @@ export default class Pathfinder {
       });
 
       try {
-        const nextTokensToSearch = await this.getNextTokensToSearch({ tokenInAddress, tokenOutAddress, parentTokenAddress, amt, IN });
+        const nextTokensToSearch = await this.getNextTokensToSearch({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
         if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
           for (let [token, value] of Object.entries(nextTokensToSearch)) {
-            resolve(this.getTokenPath({ tokenOutAddress, tokenInAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
+            resolve(this.getTokenPath({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
           }
         }
 
@@ -460,3 +458,6 @@ export default class Pathfinder {
     return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }
+
+
+
