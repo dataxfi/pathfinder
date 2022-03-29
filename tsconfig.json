@@ -6,7 +6,8 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
+    "rootDir": "src/"
   },
-  "exclude": ["**/*.test.ts", "**/*.mock.ts", "jest.config.ts"],
+  "exclude": ["jest.config.ts"],
   "lib": ["es2015"]
 }

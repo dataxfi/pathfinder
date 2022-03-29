@@ -1,4 +1,5 @@
 const axios = require("axios");
+const fs = require("fs");
 interface IPoolNode {
   poolAddress: string;
   t1Address: string;
@@ -8,11 +9,15 @@ interface IPoolNode {
   edges: Set<string>;
 }
 interface INextTokensToSearch {
-  [key: number]: { parent: string; amt?: number };
+  [key: number]: { parentToken: string; amt?: number };
 }
 
-interface PoolGraph {
+interface IPoolGraph {
   [key: string]: IPoolNode;
+}
+
+interface ITokenGraph {
+  [key: string]: { parent: string; pools: IPoolGraph };
 }
 
 interface IBFSResultPoolNode {
@@ -27,10 +32,9 @@ type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246"
 
 export default class Pathfinder {
   private fetchFunction;
-  public nodes: PoolGraph;
+  public nodes: ITokenGraph;
   public tokensChecked: Set<string>;
   private pendingQueries: Set<string>;
-  private rootPools: string[];
   private userTokenIn: string;
   private userTokenOut: string;
   private chainId;
@@ -40,7 +44,6 @@ export default class Pathfinder {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
-    this.rootPools = [];
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
@@ -67,8 +70,25 @@ export default class Pathfinder {
     }
   }
 
-  private addPoolNode(poolNode: IPoolNode) {
-    this.nodes[poolNode.poolAddress] = poolNode;
+  /**
+   * Adds a pool node to the tokenNodes 'pool' attribute (subgraph).
+   * @param poolNode The current poolNode (IPoolNode) from the fetch request iteration.
+   * @param tokenNode The tokenNode to add poolNode to its 'pool' attribute.
+   */
+
+  private addPoolNode(poolNode: IPoolNode, tokenNode: IPoolGraph) {
+    tokenNode[poolNode.poolAddress] = poolNode;
+  }
+
+  /**
+   * Adds a token node to the main graph.
+   * @param tokenAdress The address of the token whos pools are being visited.
+   * @param parentTokenAddress The IN token preceeding the prospective OUT tokens.
+   */
+
+  private addTokenNode(tokenAdress, parentTokenAddress) {
+    if (!parentTokenAddress) parentTokenAddress = null;
+    this.nodes[tokenAdress] = { parent: parentTokenAddress, pools: {} };
   }
 
   /**
@@ -79,66 +99,61 @@ export default class Pathfinder {
   public async getPoolsForToken({
     tokenAddress,
     destinationAddress,
-    parentPoolAddress,
+    parentTokenAddress,
     IN,
     amt,
   }: {
     tokenAddress: string;
     destinationAddress: string;
     IN: boolean;
-    parentPoolAddress: string;
+    parentTokenAddress: string;
     amt?: string;
   }): Promise<INextTokensToSearch | null> {
     const nextTokensToSearch: {} = {};
 
     return new Promise(async (resolve, reject) => {
       if (this.tokensChecked.has(tokenAddress)) resolve(null);
-      let leaves: IPoolNode[];
+      let poolsFromToken: IPoolNode[];
       try {
         if (IN) {
-          leaves = await this.fetchFunction(tokenAddress);
+          poolsFromToken = await this.fetchFunction(tokenAddress);
         } else {
-          leaves = await this.fetchFunction(tokenAddress, amt);
+          poolsFromToken = await this.fetchFunction(tokenAddress, amt);
         }
 
-        if (leaves.length === 0) {
-          throw new Error("There are no pools for " + tokenAddress + " on this chain.");
+        if (poolsFromToken.length === 0) {
+          reject({ code: 1, message: "There are no pools for " + tokenAddress + " on this chain." });
         }
         //iterate pools response adding nodes and edges
-        for (let i = 0; i < leaves.length; i++) {
-          const poolNode = leaves[i];
+        for (let i = 0; i < poolsFromToken.length; i++) {
+          const poolNode = poolsFromToken[i];
+
+          if (this.nodes[tokenAddress]) {
+            this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
+          } else {
+            this.addTokenNode(tokenAddress, parentTokenAddress);
+            this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
+          }
+
           if (poolNode.t1Address === destinationAddress || poolNode.t2Address === destinationAddress) {
-            //check if destination pool was found, return null to move on to finding path
+            this.addTokenNode(destinationAddress, tokenAddress);
             resolve(null);
           }
 
-          const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
-
           //since the destination pool was not found, the token needs to be swapped as path descends
           //calculate what amount of the next token would be needed from the next pool
+          const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
+
           let nextAmt;
           if (!IN) nextAmt = "1"; //calculateSwap()
           if (!nextTokensToSearch[nextTokenAddress])
-            IN
-              ? (nextTokensToSearch[nextTokenAddress] = { parent: poolNode.poolAddress })
-              : (nextTokensToSearch[nextTokenAddress] = { parent: poolNode.poolAddress, amt: nextAmt });
+            IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt });
 
           //add node to tree
           if (IN) {
             let hasEnoughLiquidity;
             //todo: calculateSwap and check if there is enough liquidity
             // if (!hasEnoughLiquidity) break;
-          }
-
-          this.addPoolNode(poolNode);
-
-          if (parentPoolAddress) {
-            //add edge to parent
-            this.nodes[parentPoolAddress].edges.add(poolNode.poolAddress);
-            //add edge from parent to new node
-            this.nodes[poolNode.poolAddress].edges.add(parentPoolAddress);
-          } else {
-            this.rootPools.push(poolNode.poolAddress);
           }
         }
 
@@ -150,46 +165,40 @@ export default class Pathfinder {
     });
   }
 
+  /**
+   * Calls get poolsForToken with appropriate params
+   * @param param0
+   * @returns next tokens to search
+   */
   private async getNextTokensToSearch({
     tokenInAddress,
     tokenOutAddress,
-    parentPoolAddress,
+    parentTokenAddress,
     amt,
     IN,
   }: {
     tokenInAddress: string;
     tokenOutAddress: string;
     IN: boolean;
-    parentPoolAddress?: string;
+    parentTokenAddress?: string;
     amt?: string;
   }): Promise<INextTokensToSearch> {
     let nextTokensToSearch: INextTokensToSearch | null;
-
+    let tokenAddress = IN ? tokenInAddress : tokenOutAddress;
+    let destinationAddress = IN ? tokenOutAddress : tokenInAddress;
     try {
-      if (IN) {
-        // call with recursive values for in
-        if (this.pendingQueries.has(tokenInAddress)) return;
-        this.pendingQueries.add(tokenInAddress);
-        nextTokensToSearch = await this.getPoolsForToken({
-          tokenAddress: tokenInAddress,
-          destinationAddress: tokenOutAddress,
-          IN,
-          parentPoolAddress,
-        });
-        this.pendingQueries.delete(tokenInAddress);
-      } else {
-        //call with recursive values for out
-        if (this.pendingQueries.has(tokenOutAddress)) return;
-        this.pendingQueries.add(tokenOutAddress);
-        nextTokensToSearch = await this.getPoolsForToken({
-          tokenAddress: tokenOutAddress,
-          destinationAddress: tokenInAddress,
-          IN,
-          parentPoolAddress,
-          amt,
-        });
-        this.pendingQueries.delete(tokenOutAddress);
-      }
+      // call with recursive values for in
+      if (this.pendingQueries.has(tokenAddress)) return;
+      this.pendingQueries.add(tokenAddress);
+      nextTokensToSearch = await this.getPoolsForToken({
+        tokenAddress: tokenAddress,
+        destinationAddress: destinationAddress,
+        IN,
+        parentTokenAddress,
+        amt,
+      });
+      this.pendingQueries.delete(tokenAddress);
+
       return nextTokensToSearch;
     } catch (error) {
       throw error;
@@ -199,12 +208,12 @@ export default class Pathfinder {
   /**
    * Gets token path for a swap pair.
    * @param param0
-   * @returns An array of tokens to be traded in order to route to the destination token, optimised to be the shortes path possible.
+   * @returns An array of tokens to be traded in order to route to the destination token in the shortest path possible.
    */
   public async getTokenPath({
     tokenInAddress,
     tokenOutAddress,
-    parentPoolAddress,
+    parentTokenAddress,
     amt,
     abortSignal,
     IN,
@@ -212,7 +221,7 @@ export default class Pathfinder {
     tokenInAddress: string;
     tokenOutAddress: string;
     IN: boolean;
-    parentPoolAddress?: string;
+    parentTokenAddress?: string;
     amt?: string;
     abortSignal?: AbortSignal;
   }): Promise<string[]> {
@@ -225,22 +234,15 @@ export default class Pathfinder {
       });
 
       try {
-        const nextTokensToSearch = await this.getNextTokensToSearch({ tokenInAddress, tokenOutAddress, parentPoolAddress, amt, IN });
+        const nextTokensToSearch = await this.getNextTokensToSearch({ tokenInAddress, tokenOutAddress, parentTokenAddress, amt, IN });
         if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
           for (let [token, value] of Object.entries(nextTokensToSearch)) {
-            resolve(this.getTokenPath({ tokenOutAddress, tokenInAddress: token, parentPoolAddress: value.parent, amt: value.amt, IN }));
+            resolve(this.getTokenPath({ tokenOutAddress, tokenInAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
           }
         }
 
         if (this.pendingQueries.size === 0) {
-          const results: IBFSResults[] = this.breadthSearchGraph(tokenOutAddress);
-          const path: string[] = this.constructPath(results, this.userTokenIn, this.userTokenOut);
-          this.nodes = {};
-          this.tokensChecked = new Set();
-          this.rootPools = [];
-          this.userTokenIn = "";
-          this.userTokenOut = "";
-          resolve(path);
+          resolve(this.constructPath({ destination: this.userTokenOut }));
         }
       } catch (error) {
         reject(error);
@@ -248,58 +250,37 @@ export default class Pathfinder {
     });
   }
 
-  private breadthSearchGraph(destination: string): IBFSResults[] {
-    const searches: IBFSResults[] = this.rootPools.map((poolAddress) => {
-      let queue = [poolAddress];
-      const visitedNodes = {};
-      visitedNodes[poolAddress] = null;
-      while (queue.length > 0) {
-        const currentPoolAddress = queue.shift();
-        const pool = this.nodes[currentPoolAddress];
-        pool.edges.forEach((poolAddress) => {
-          if (!visitedNodes[poolAddress]) {
-            visitedNodes[poolAddress] = { pool: this.nodes[poolAddress], parent: currentPoolAddress };
-            queue.push(poolAddress);
-          }
-        });
-        if (pool.t1Address === destination || pool.t2Address === destination) {
-          return visitedNodes;
-        }
-      }
-    });
+  /**
+   * Follows data from destination token to token in.
+   * @param param0
+   * @returns path as a string[]
+   */
+  private constructPath({ path, destination }: { path?: string[]; destination?: string }) {
+    let parent: string;
 
-    return searches;
-  }
-
-  private constructPath(results: IBFSResults[], start: string, destination: string) {
-    let allResults: IBFSResults;
-    results.forEach((obj: {}) => {
-      allResults = { ...allResults, ...obj };
-    });
-    let bestPath = [];
-
-    function getNextToken(value: IBFSResultPoolNode, currPath: string[], otherToken?: string) {
-      if (otherToken) currPath.push(otherToken);
-
-      if (value.pool.t1Address === destination || value.pool.t2Address === destination) {
-        currPath.push(destination);
-        if (bestPath.length === 0 || bestPath.length > currPath.length) bestPath = currPath;
-        return;
-      } else {
-        //the correct path is somewhere else in the data
-        if (value.pool.t1Address === otherToken || value.pool.t2Address === otherToken) return;
-        const nextOtherToken = value.pool.t1Address === start ? value.pool.t2Address : value.pool.t1Address;
-        getNextToken(allResults[value.parent], currPath, nextOtherToken);
-      }
+    if (path) {
+      parent = this.nodes[path[0]].parent;
+    } else {
+      path = [destination];
+      parent = this.nodes[destination].parent;
     }
 
-    for (const [key, value] of Object.entries(allResults)) {
-      const path: string[] = [start];
-      getNextToken(value, path);
+    if (parent) {
+      path.unshift(parent);
+      this.constructPath({ path });
     }
-    return bestPath;
+    this.nodes = {};
+    this.tokensChecked = new Set();
+    this.userTokenIn = "";
+    this.userTokenOut = "";
+    return path;
   }
 
+  /**
+   * Formats query responses into one standard object.
+   * @param response
+   * @returns IPoolNode[]
+   */
   private formatter(response: any) {
     const {
       data: {
@@ -413,7 +394,7 @@ export default class Pathfinder {
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
-  private async otherChainsReq(url: string, address: string, amt: string = "0.001") {
+  private async otherChainsReq(url: string, address: string, amt: string) {
     const response = await axios.post(url, {
       query: this.otherChainsQuery(address, amt),
     });
@@ -426,7 +407,7 @@ export default class Pathfinder {
    * @param address
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
-  private async uniswapSchemaReq(url: string, address: string, amt: string = "0.001") {
+  private async uniswapSchemaReq(url: string, address: string, amt: string) {
     const uniswap = await axios.post(url, {
       query: this.uniswapQuery(address, amt),
     });
@@ -479,4 +460,3 @@ export default class Pathfinder {
     return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }
-
