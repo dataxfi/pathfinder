@@ -1,6 +1,7 @@
 import Pathfinder from "./pathfinder";
 
 describe("Pathfinder works for all chains when supplying exact IN to OUT pair.", () => {
+  jest.setTimeout(60000);
   it("Pathfinder works on mainnet", async () => {
     try {
       const pathfinder = new Pathfinder(1);
@@ -185,3 +186,5 @@ describe("Pathfinder works for all chains when supplying IN to exact OUT pair.",
     }
   });
 });
+
+

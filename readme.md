@@ -1,7 +1,19 @@
-## Pathfinder 
+# Pathfinder 
 > A module leveraging subgraph data from api.thegraph.com, respective to `chainId`, to determine swap paths for token pairs. 
 
-### Usage
+
+Navigation 
+- [Pathfinder](#pathfinder)
+  - [Usage](#usage)
+  - [API](#api)
+    - [getPoolsForToken](#getpoolsfortoken)
+    - [getTokenPath](#gettokenpath)
+  - [Limitations](#limitations)
+  - [Set up locally](#set-up-locally)
+  - [Test locally](#test-locally)
+
+
+## Usage
 
 ```
 const pathfinder = new Pathfinder(1);
@@ -25,9 +37,9 @@ output
 ]
 ```
 
-### API
+## API
 
-getPoolsForToken
+### getPoolsForToken
 
 Makes request for pools associated to a token, sets nodes on the graph for each pool.
 Returns the next tokens to be searched OR null if a path can be made.
@@ -48,21 +60,21 @@ pathfinder.getPoolsForToken({
   ```
 
 
-getTokenPath 
+### getTokenPath 
 
 Gets token path for a swap pair. Returns an array of tokens to be traded in order to route to the destination token, optimised to be the shortes path possible.
 
    ```
     pathfinder.getTokenPath({
-    tokenInAddress,
-    tokenOutAddress,
+    tokenAddress,
+    destinationAddress,
     parentPoolAddress,
     amt,
     abortSignal,
     IN,
   }: {
-    tokenInAddress: string;
-    tokenOutAddress: string;
+    tokenAddress: string;
+    destinationAddress: string;
     IN: boolean;
     parentPoolAddress?: string;
     amt?: string;
@@ -86,3 +98,13 @@ Currently the subgraphs being queried are all subgraphs from the most popular de
 - solarbeam (moonriver)
 
 But there are other pools that are available. Apps like balancer use different pools and subgraphs, and support for these could potentially be added in the future. 
+
+## Set up locally 
+
+1. Fork and/or clone 
+2. Run `Yarn install`
+3. Run `Yarn build`
+   
+## Test locally 
+1. [Set up locally](#set-up-locally)
+2. Run `yarn test`

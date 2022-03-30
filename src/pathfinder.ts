@@ -393,9 +393,13 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async otherChainsReq(url: string, address: string, amt: string) {
-    const response = await axios.post(url, {
-      query: this.otherChainsQuery(address, amt),
-    });
+    const response = await axios.post(
+      url,
+      {
+        query: this.otherChainsQuery(address, amt),
+      },
+      { timeout: 60000 }
+    );
 
     return this.formatter(response);
   }
@@ -406,9 +410,13 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async uniswapSchemaReq(url: string, address: string, amt: string) {
-    const uniswap = await axios.post(url, {
-      query: this.uniswapQuery(address, amt),
-    });
+    const uniswap = await axios.post(
+      url,
+      {
+        query: this.uniswapQuery(address, amt),
+      },
+      { timeout: 60000 }
+    );
 
     return this.formatter(uniswap);
   }
@@ -459,5 +467,12 @@ export default class Pathfinder {
   }
 }
 
-
-
+const pathfinder = new Pathfinder(56);
+const path = pathfinder
+  .getTokenPath({
+    tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
+    destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+    IN: true,
+  })
+  .then(console.log)
+  .catch(console.log);

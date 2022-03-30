@@ -1,8 +1,8 @@
 {
   "name": "pathfinder",
   "version": "1.0.0",
-  "main": "index.js",
-  "author": "Keith Frazier <keithers98@gmail.com>",
+  "main": "pathfinder.ts",
+  "author": "Keith Frazier",
   "license": "MIT",
   "scripts": {
     "build": "yarn tsc",
