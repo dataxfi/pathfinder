@@ -78,8 +78,8 @@ describe("Pathfinder works for all chains when supplying exact IN to OUT pair.",
     try {
       const pathfinder = new Pathfinder(4);
       const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xfdd3a4d1b4d96e9812e27897346006b906bd98ce",
-        destinationAddress: "0xe817e4183A09512B7438E1a6f6c121DBc179538e",
+        tokenAddress: "0xcf6823cf19855696d49c261e926dce2719875c3d",
+        destinationAddress: "0x8d2da54a1691fd7bd1cd0a242d922109b0616c68",
         IN: true,
       });
       expect(path).toBeDefined();
@@ -189,8 +189,8 @@ describe("Pathfinder works for all chains when supplying IN to exact OUT pair.",
     try {
       const pathfinder = new Pathfinder(4);
       const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xfdd3a4d1b4d96e9812e27897346006b906bd98ce",
-        destinationAddress: "0xe817e4183A09512B7438E1a6f6c121DBc179538e",
+        tokenAddress: "0xcf6823cf19855696d49c261e926dce2719875c3d",
+        destinationAddress: "0x8d2da54a1691fd7bd1cd0a242d922109b0616c68",
         IN: false,
       });
       expect(path).toBeDefined();

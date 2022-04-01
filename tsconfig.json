@@ -6,8 +6,10 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src/"
+    "rootDir": "src/",
+    "resolveJsonModule": true,
   },
-  "exclude": ["jest.config.ts"],
+  "exclude": ["jest.config.ts", "nodes.json"],
+  "include": ["src/**/*.json", "src/**/*.ts"],
   "lib": ["es2015"]
 }

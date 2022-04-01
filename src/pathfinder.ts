@@ -307,11 +307,11 @@ export default class Pathfinder {
    */
 
   private async rinkebyPools(address: string) {
-    const pools = rinkeby[address]
+    const pools = rinkeby[address];
     //TODO: Traverse pools to request and set total locked tokens:
     //TODO: "totalValueLockedToken0": (x)
     //TODO: "totalValueLockedToken1": (x)
-    const data = { data: { data: { ...rinkeby[address] } } }
+    const data = { data: { data: { ...pools } } };
 
     return this.formatter(data);
   }
@@ -475,12 +475,3 @@ export default class Pathfinder {
   }
 }
 
-const pathfinder = new Pathfinder(56);
-const path = pathfinder
-  .getTokenPath({
-    tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-    destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
-    IN: true,
-  })
-  .then(console.log)
-  .catch(console.log);
