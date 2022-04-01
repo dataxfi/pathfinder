@@ -1,5 +1,5 @@
 const axios = require("axios");
-const fs = require("fs");
+const rinkeby = require("./rinkeby.json");
 interface IPoolNode {
   poolAddress: string;
   t1Address: string;
@@ -306,7 +306,15 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
 
-  private async rinkebyPools(address: string) {}
+  private async rinkebyPools(address: string) {
+    const pools = rinkeby[address]
+    //TODO: Traverse pools to request and set total locked tokens:
+    //TODO: "totalValueLockedToken0": (x)
+    //TODO: "totalValueLockedToken1": (x)
+    const data = { data: { data: { ...rinkeby[address] } } }
+
+    return this.formatter(data);
+  }
 
   /**
    * Builds and returns uniswap query

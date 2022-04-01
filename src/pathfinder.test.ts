@@ -56,12 +56,30 @@ describe("Pathfinder works for all chains when supplying exact IN to OUT pair.",
       throw error;
     }
   });
-  it("Pathfinder works on bsc", async () => {
+  // it("Pathfinder works on bsc", async () => {
+  //   try {
+  //     const pathfinder = new Pathfinder(56);
+  //     const path = await pathfinder.getTokenPath({
+  //       tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
+  //       destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+  //       IN: true,
+  //     });
+  //     expect(path).toBeDefined();
+  //     expect(Array.isArray(path)).toBe(true);
+  //     expect(path.length).toBeGreaterThanOrEqual(2);
+  //   } catch (error) {
+  //     if (error.code && error.code === 1) {
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // });
+  it("Pathfinder works on rinkeby", async () => {
     try {
-      const pathfinder = new Pathfinder(56);
+      const pathfinder = new Pathfinder(4);
       const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-        destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+        tokenAddress: "0xfdd3a4d1b4d96e9812e27897346006b906bd98ce",
+        destinationAddress: "0xe817e4183A09512B7438E1a6f6c121DBc179538e",
         IN: true,
       });
       expect(path).toBeDefined();
@@ -149,12 +167,30 @@ describe("Pathfinder works for all chains when supplying IN to exact OUT pair.",
       throw error;
     }
   });
-  it("Pathfinder works on bsc", async () => {
+  // it("Pathfinder works on bsc", async () => {
+  //   try {
+  //     const pathfinder = new Pathfinder(56);
+  //     const path = await pathfinder.getTokenPath({
+  //       tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
+  //       destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+  //       IN: false,
+  //     });
+  //     expect(path).toBeDefined();
+  //     expect(Array.isArray(path)).toBe(true);
+  //     expect(path.length).toBeGreaterThanOrEqual(2);
+  //   } catch (error) {
+  //     if (error.code && error.code === 1) {
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // });
+  it("Pathfinder works on rinkeby", async () => {
     try {
-      const pathfinder = new Pathfinder(56);
+      const pathfinder = new Pathfinder(4);
       const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-        destinationAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+        tokenAddress: "0xfdd3a4d1b4d96e9812e27897346006b906bd98ce",
+        destinationAddress: "0xe817e4183A09512B7438E1a6f6c121DBc179538e",
         IN: false,
       });
       expect(path).toBeDefined();
@@ -186,5 +222,3 @@ describe("Pathfinder works for all chains when supplying IN to exact OUT pair.",
     }
   });
 });
-
-
