@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "author": "Keith Frazier",
-  "license": "MIT",
+  "license": "Apache",
   "scripts": {
     "build": "yarn tsc",
     "test": "yarn jest --detectOpenHandles"
