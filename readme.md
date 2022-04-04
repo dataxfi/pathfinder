@@ -15,6 +15,8 @@ Navigation
 
 ## Usage
 
+> `IN` paramater refers to whether the 'token in' (token being sold) is the exact token.
+
 ```
 const pathfinder = new Pathfinder(1);
 try {
