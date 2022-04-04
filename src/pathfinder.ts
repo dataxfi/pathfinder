@@ -1,5 +1,7 @@
-const axios = require("axios");
-const rinkeby = require("./rinkeby.json");
+import axios from "axios";
+import rinkeby from "./rinkeby.json";
+import {Ocean} from "@dataxfi/datax.js";
+
 interface IPoolNode {
   poolAddress: string;
   t1Address: string;
@@ -38,15 +40,16 @@ export default class Pathfinder {
   private userTokenIn: string;
   private userTokenOut: string;
   private chainId;
-  // public path;
+  private datax: Ocean;
 
-  constructor(chainId: supportedChains) {
+  constructor(chainId: supportedChains, datax?: Ocean) {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
+    this.datax = datax
 
     switch (Number(this.chainId)) {
       case 4:
@@ -474,4 +477,3 @@ export default class Pathfinder {
     return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }
-
