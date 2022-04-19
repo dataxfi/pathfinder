@@ -1,6 +1,7 @@
 import axios from "axios";
 import rinkeby from "./rinkeby.json";
-import {Ocean} from "@dataxfi/datax.js";
+import { Ocean } from "@dataxfi/datax.js";
+import fs from "fs";
 
 interface IPoolNode {
   poolAddress: string;
@@ -11,15 +12,15 @@ interface IPoolNode {
   edges: Set<string>;
 }
 interface INextTokensToSearch {
-  [key: number]: { parentToken: string; amt?: number };
+  [tokenAdress: number]: { parentToken: string; amt?: number };
 }
 
 interface IPoolGraph {
-  [key: string]: IPoolNode;
+  [tokenAddress: string]: IPoolNode;
 }
 
 interface ITokenGraph {
-  [key: string]: { parent: string; pools: IPoolGraph };
+  [tokenAddress: string]: { parent: string; pools: IPoolGraph };
 }
 
 interface IBFSResultPoolNode {
@@ -49,7 +50,7 @@ export default class Pathfinder {
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
-    this.datax = datax
+    this.datax = datax;
 
     switch (Number(this.chainId)) {
       case 4:
@@ -99,32 +100,27 @@ export default class Pathfinder {
    * @param param0
    * @returns The next tokens to be searched OR null if a path can be made.
    */
-  public async getPoolsForToken({
+  public async searchPoolData({
     tokenAddress,
     destinationAddress,
     parentTokenAddress,
     IN,
     amt,
+    poolsFromToken,
+    nextTokensToSearch,
   }: {
+    poolsFromToken: IPoolNode[];
     tokenAddress: string;
     destinationAddress: string;
     IN: boolean;
     parentTokenAddress: string;
+    nextTokensToSearch: INextTokensToSearch;
     amt?: string;
   }): Promise<INextTokensToSearch | null> {
-    const nextTokensToSearch: {} = {};
-
     return new Promise(async (resolve, reject) => {
-      if (this.tokensChecked.has(tokenAddress)) resolve(null);
-      let poolsFromToken: IPoolNode[];
       try {
-        if (IN) {
-          poolsFromToken = await this.fetchFunction(tokenAddress);
-        } else {
-          poolsFromToken = await this.fetchFunction(tokenAddress, amt);
-        }
-
         if (poolsFromToken.length === 0) {
+          console.log("There are no pools for " + tokenAddress + " on this chain.");
           reject({ code: 1, message: "There are no pools for " + tokenAddress + " on this chain." });
         }
         //iterate pools response adding nodes and edges
@@ -143,10 +139,9 @@ export default class Pathfinder {
             resolve(null);
           }
 
-          //since the destination pool was not found, the token needs to be swapped as path descends
-          //calculate what amount of the next token would be needed from the next pool
           const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
 
+          //calculate what amount of the next token would be needed from the next pool
           let nextAmt;
           if (!IN) nextAmt = "1"; //calculateSwap()
           if (!nextTokensToSearch[nextTokenAddress])
@@ -160,7 +155,6 @@ export default class Pathfinder {
           }
         }
 
-        this.tokensChecked.add(tokenAddress);
         resolve(nextTokensToSearch);
       } catch (error) {
         console.error(error);
@@ -169,38 +163,79 @@ export default class Pathfinder {
   }
 
   /**
-   * Calls get poolsForToken with appropriate params
-   * @param param0
+   * Recursively calls subgraphs for all relevant pool data for a token.
+   * @param tokenAddress The token to get pools for (token in)
+   * @param destinationAddress The token to be attained (token out)
+   * @param amt The amount of destination token desired
+   * @param IN Wether the exact token is the token in
+   * @param parentTokenAddress the token that was traded prior to the current token being searched (for recursion)
+   * @param skip pagination for pool data requests (for recursion)
+   * @param poolsFromToken all pool data from token (for recursion)
+   * @param nextTokensToSearch all tokens to search next (for recursion)
    * @returns next tokens to search
    */
-  private async getNextTokensToSearch({
+  private async getPoolData({
     tokenAddress,
     destinationAddress,
-    parentTokenAddress,
     amt,
     IN,
+    parentTokenAddress,
+    skip = 0,
+    poolsFromToken = [],
+    nextTokensToSearch = {},
   }: {
     tokenAddress: string;
     destinationAddress: string;
     IN: boolean;
-    parentTokenAddress?: string;
     amt?: string;
+    parentTokenAddress?: string;
+    skip?: number;
+    poolsFromToken?: IPoolNode[];
+    nextTokensToSearch?: INextTokensToSearch;
   }): Promise<INextTokensToSearch> {
-    let nextTokensToSearch: INextTokensToSearch | null;
     try {
-      // call with recursive values for in
-      if (this.pendingQueries.has(tokenAddress)) return;
+      tokenAddress = tokenAddress.toLowerCase();
+      destinationAddress = destinationAddress.toLowerCase();
+
+      // skip tokens already searched
+      if (this.tokensChecked.has(tokenAddress)) return;
+
       this.pendingQueries.add(tokenAddress);
-      nextTokensToSearch = await this.getPoolsForToken({
+
+      // fetch results (200 max default)
+      const response = await this.fetchFunction(tokenAddress, amt);
+      poolsFromToken.push(...response);
+
+      // search results for destination
+      nextTokensToSearch = await this.searchPoolData({
+        poolsFromToken,
         tokenAddress,
         destinationAddress,
         IN,
         parentTokenAddress,
         amt,
+        nextTokensToSearch,
       });
-      this.pendingQueries.delete(tokenAddress);
 
-      return nextTokensToSearch;
+      // recurse if results were >= 100
+      if (nextTokensToSearch && response.length >= 1000) {
+        await this.getPoolData({
+          tokenAddress,
+          destinationAddress,
+          parentTokenAddress,
+          amt,
+          IN,
+          skip: skip + 1000,
+          poolsFromToken,
+          nextTokensToSearch,
+        });
+      } else {
+        this.pendingQueries.delete(tokenAddress);
+        this.tokensChecked.add(tokenAddress);
+
+        // if there are no more results to be searched, return nextTokensToSearch
+        return nextTokensToSearch;
+      }
     } catch (error) {
       throw error;
     }
@@ -226,6 +261,9 @@ export default class Pathfinder {
     amt?: string;
     abortSignal?: AbortSignal;
   }): Promise<string[]> {
+    tokenAddress = tokenAddress.toLowerCase();
+    destinationAddress = destinationAddress.toLowerCase();
+
     if (!this.userTokenIn) this.userTokenIn = tokenAddress;
     if (!this.userTokenOut) this.userTokenOut = destinationAddress;
 
@@ -235,18 +273,19 @@ export default class Pathfinder {
       });
 
       try {
-        const nextTokensToSearch = await this.getNextTokensToSearch({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
+        const nextTokensToSearch = await this.getPoolData({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
+
         if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
           for (let [token, value] of Object.entries(nextTokensToSearch)) {
-            resolve(this.getTokenPath({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
+            // resolve();
+            this.getTokenPath({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN });
           }
-        }
-
-        if (this.pendingQueries.size === 0) {
+        } else if (this.pendingQueries.size === 0) {
           resolve(this.constructPath({ destination: this.userTokenOut }));
         }
       } catch (error) {
-        reject(error);
+        // reject(error);
+        console.error(error);
       }
     });
   }
@@ -257,24 +296,28 @@ export default class Pathfinder {
    * @returns path as a string[]
    */
   private constructPath({ path, destination }: { path?: string[]; destination?: string }) {
-    let parent: string;
+    try {
+      let parent: string;
 
-    if (path) {
-      parent = this.nodes[path[0]].parent;
-    } else {
-      path = [destination];
-      parent = this.nodes[destination].parent;
-    }
+      if (path) {
+        parent = this.nodes[path[0]].parent;
+      } else {
+        path = [destination];
+        parent = this.nodes[destination].parent;
+      }
 
-    if (parent) {
-      path.unshift(parent);
-      this.constructPath({ path });
+      if (parent) {
+        path.unshift(parent);
+        this.constructPath({ path });
+      }
+      this.nodes = {};
+      this.tokensChecked = new Set();
+      this.userTokenIn = "";
+      this.userTokenOut = "";
+      return path;
+    } catch (error) {
+      console.error(error);
     }
-    this.nodes = {};
-    this.tokensChecked = new Set();
-    this.userTokenIn = "";
-    this.userTokenOut = "";
-    return path;
   }
 
   /**
@@ -283,24 +326,29 @@ export default class Pathfinder {
    * @returns IPoolNode[]
    */
   private formatter(response: any) {
-    const {
-      data: {
-        data: { t0isOcean, t1isOcean },
-      },
-    } = response;
+    if(response.data?.errors) return
+    try {
+      const {
+        data: {
+          data: { t0IsMatch, t1IsMatch },
+        },
+      } = response;
 
-    const allData = [...t0isOcean, ...t1isOcean];
+      const allData = [...t0IsMatch, ...t1IsMatch];
 
-    const edges = new Set(allData.map((poolData) => poolData.id));
+      const edges = new Set(allData.map((poolData) => poolData.id));
 
-    return allData.map((pool) => ({
-      poolAddress: pool.id,
-      t1Address: pool.token0.id,
-      t2Address: pool.token1.id,
-      t1Liquidity: pool.totalValueLockedToken0,
-      t2Liquidity: pool.totalValueLockedToken1,
-      edges,
-    }));
+      return allData.map((pool) => ({
+        poolAddress: pool.id,
+        t1Address: pool.token0.id,
+        t2Address: pool.token1.id,
+        t1Liquidity: pool.totalValueLockedToken0,
+        t2Liquidity: pool.totalValueLockedToken1,
+        edges,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
@@ -328,10 +376,10 @@ export default class Pathfinder {
    * @returns a query as a string
    */
 
-  private otherChainsQuery(address: string, amt: string, first: number = 100, skip: number = 0) {
+  private otherChainsQuery(address: string, amt: string, first: number = 1000, skip: number = 0) {
     return `
   query {
-    t0isOcean: pairs(first:${first} skip:${skip} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
+    t0IsMatch: pairs(first:${first} skip:${skip} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
     orderBy:reserveUSD
     orderDirection:desc){
         id
@@ -346,7 +394,7 @@ export default class Pathfinder {
       totalValueLockedToken1:reserve1
     }
     
-    t1isOcean: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
+    t1IsMatch: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
     orderBy:reserveUSD
     orderDirection:desc){
         id
@@ -373,7 +421,7 @@ export default class Pathfinder {
    * @returns a query as a string
    */
 
-  private uniswapQuery(address: string, amt: string, first: number = 100, skip: number = 0) {
+  private uniswapQuery(address: string, amt: string, first: number = 1000, skip: number = 0) {
     const generalReq = `orderBy: totalValueLockedUSD
     orderDirection: desc
     subgraphError: allow
@@ -385,14 +433,17 @@ export default class Pathfinder {
       token0{
         id
       }
+      totalValueLockedToken0
+      totalValueLockedToken1
     }`;
 
     return `query {
-      t0isOcean: pools(first:${first} skip:${skip} where:{token0_in:["${address}"],
+      t0IsMatch: pools(first:${first} skip:${skip} where:{token0_in:["${address}"],
       totalValueLockedToken0_gt:"${amt}"}     
       ${generalReq}
       
-      t1isOcean: pools(first:${first} skip:${skip} where:{token1_in:["${address}"], 
+      
+      t1IsMatch: pools(first:${first} skip:${skip} where:{token1_in:["${address}"], 
       totalValueLockedToken1_gt:"${amt}"}   
       ${generalReq}
     }`;
@@ -404,15 +455,19 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async otherChainsReq(url: string, address: string, amt: string) {
-    const response = await axios.post(
-      url,
-      {
-        query: this.otherChainsQuery(address, amt),
-      },
-      { timeout: 60000 }
-    );
+    try {
+      const response = await axios.post(
+        url,
+        {
+          query: this.otherChainsQuery(address, amt),
+        },
+        { timeout: 600000 }
+      );
 
-    return this.formatter(response);
+      return this.formatter(response);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
@@ -421,15 +476,19 @@ export default class Pathfinder {
    * @param amt - token amount to be swapped. Pools with less than are excluded
    */
   private async uniswapSchemaReq(url: string, address: string, amt: string) {
-    const uniswap = await axios.post(
-      url,
-      {
-        query: this.uniswapQuery(address, amt),
-      },
-      { timeout: 60000 }
-    );
+    try {
+      const uniswap = await axios.post(
+        url,
+        {
+          query: this.uniswapQuery(address, amt),
+        },
+        { timeout: 600000 }
+      );
 
-    return this.formatter(uniswap);
+      return this.formatter(uniswap);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
