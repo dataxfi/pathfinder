@@ -1,37 +1,6 @@
-import axios from "axios";
-import rinkeby from "./rinkeby.json";
 import { Ocean } from "@dataxfi/datax.js";
-import fs from "fs";
-
-interface IPoolNode {
-  poolAddress: string;
-  t1Address: string;
-  t2Address: string;
-  t1Liquidity: string;
-  t2Liquidity: string;
-  edges: Set<string>;
-}
-interface INextTokensToSearch {
-  [tokenAdress: number]: { parentToken: string; amt?: number };
-}
-
-interface IPoolGraph {
-  [tokenAddress: string]: IPoolNode;
-}
-
-interface ITokenGraph {
-  [tokenAddress: string]: { parent: string; pools: IPoolGraph };
-}
-
-interface IBFSResultPoolNode {
-  pool: IPoolNode;
-  parent: string;
-}
-interface IBFSResults {
-  [key: string]: IBFSResultPoolNode;
-}
-
-type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246" | 1285 | "1285";
+import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, supportedChains } from "./@types";
+import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "./util";
 
 export default class Pathfinder {
   private fetchFunction;
@@ -54,22 +23,22 @@ export default class Pathfinder {
 
     switch (Number(this.chainId)) {
       case 4:
-        this.fetchFunction = this.rinkebyPools;
+        this.fetchFunction = rinkebyPools;
         break;
       case 137:
-        this.fetchFunction = this.maticPools;
+        this.fetchFunction = maticPools;
         break;
       case 56:
-        this.fetchFunction = this.bscPools;
+        this.fetchFunction = bscPools;
         break;
       case 1285:
-        this.fetchFunction = this.moonriverPools;
+        this.fetchFunction = moonriverPools;
         break;
       case 246:
-        this.fetchFunction = this.energywebPools;
+        this.fetchFunction = energywebPools;
         break;
       default:
-        this.fetchFunction = this.mainnetPools;
+        this.fetchFunction = mainnetPools;
         break;
     }
   }
@@ -318,221 +287,5 @@ export default class Pathfinder {
     } catch (error) {
       console.error(error);
     }
-  }
-
-  /**
-   * Formats query responses into one standard object.
-   * @param response
-   * @returns IPoolNode[]
-   */
-  private formatter(response: any) {
-    if(response.data?.errors) return
-    try {
-      const {
-        data: {
-          data: { t0IsMatch, t1IsMatch },
-        },
-      } = response;
-
-      const allData = [...t0IsMatch, ...t1IsMatch];
-
-      const edges = new Set(allData.map((poolData) => poolData.id));
-
-      return allData.map((pool) => ({
-        poolAddress: pool.id,
-        t1Address: pool.token0.id,
-        t2Address: pool.token1.id,
-        t1Liquidity: pool.totalValueLockedToken0,
-        t2Liquidity: pool.totalValueLockedToken1,
-        edges,
-      }));
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  /**
-   * Returns set of all pools which contain provided address
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-
-  private async rinkebyPools(address: string) {
-    const pools = rinkeby[address];
-    //TODO: Traverse pools to request and set total locked tokens:
-    //TODO: "totalValueLockedToken0": (x)
-    //TODO: "totalValueLockedToken1": (x)
-    const data = { data: { data: { ...pools } } };
-
-    return this.formatter(data);
-  }
-
-  /**
-   * Builds and returns uniswap query
-   * @param address
-   * @param amt
-   * @param first
-   * @param skip
-   * @returns a query as a string
-   */
-
-  private otherChainsQuery(address: string, amt: string, first: number = 1000, skip: number = 0) {
-    return `
-  query {
-    t0IsMatch: pairs(first:${first} skip:${skip} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
-    orderBy:reserveUSD
-    orderDirection:desc){
-        id
-      token1{
-        id
-      }
-      token0{
-        id
-      }
-
-      totalValueLockedToken0:reserve0
-      totalValueLockedToken1:reserve1
-    }
-    
-    t1IsMatch: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
-    orderBy:reserveUSD
-    orderDirection:desc){
-        id
-      token0{
-        id
-      } 
-      token1 {
-        id
-      }
-      
-      totalValueLockedToken0:reserve0
-      totalValueLockedToken1:reserve1
-    }
-  }
-  `;
-  }
-
-  /**
-   * Builds and returns uniswap query
-   * @param address
-   * @param amt
-   * @param first
-   * @param skip
-   * @returns a query as a string
-   */
-
-  private uniswapQuery(address: string, amt: string, first: number = 1000, skip: number = 0) {
-    const generalReq = `orderBy: totalValueLockedUSD
-    orderDirection: desc
-    subgraphError: allow
-  ){
-      id
-      token1{
-        id
-      }
-      token0{
-        id
-      }
-      totalValueLockedToken0
-      totalValueLockedToken1
-    }`;
-
-    return `query {
-      t0IsMatch: pools(first:${first} skip:${skip} where:{token0_in:["${address}"],
-      totalValueLockedToken0_gt:"${amt}"}     
-      ${generalReq}
-      
-      
-      t1IsMatch: pools(first:${first} skip:${skip} where:{token1_in:["${address}"], 
-      totalValueLockedToken1_gt:"${amt}"}   
-      ${generalReq}
-    }`;
-  }
-
-  /**
-   * Returns an axios response from the url provided.
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async otherChainsReq(url: string, address: string, amt: string) {
-    try {
-      const response = await axios.post(
-        url,
-        {
-          query: this.otherChainsQuery(address, amt),
-        },
-        { timeout: 600000 }
-      );
-
-      return this.formatter(response);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  /**
-   * Returns an axios response from the url provided.
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async uniswapSchemaReq(url: string, address: string, amt: string) {
-    try {
-      const uniswap = await axios.post(
-        url,
-        {
-          query: this.uniswapQuery(address, amt),
-        },
-        { timeout: 600000 }
-      );
-
-      return this.formatter(uniswap);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  /**
-   * Returns set of all pools which contain provided address from Energyweb chain (246)
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async energywebPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt);
-  }
-
-  /**
-   * Returns set of all pools which contain provided address from matic chain (137)
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-
-  private async maticPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://polygon.furadao.org/subgraphs/name/quickswap", address, amt);
-  }
-  /**
-   * Returns set of all pools which contain provided address from mainnet (1)
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async mainnetPools(address: string, amt: string = "0.001") {
-    return this.uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", address, amt);
-  }
-
-  /**
-   * Returns set of all pools which contain provided address from bsc chain (56)
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async bscPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt);
-  }
-
-  /**
-   * Returns set of all pools which contain provided address from moonriver chain (1285)
-   * @param address
-   * @param amt - token amount to be swapped. Pools with less than are excluded
-   */
-  private async moonriverPools(address: string, amt: string = "0.001") {
-    return this.otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
   }
 }

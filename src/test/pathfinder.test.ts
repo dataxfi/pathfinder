@@ -1,4 +1,4 @@
-import Pathfinder from "./pathfinder";
+import Pathfinder from "../pathfinder";
 describe("Pathfinder works for all chains when supplying exact IN to OUT pair.", () => {
   jest.setTimeout(60000);
   
@@ -56,24 +56,24 @@ describe("Pathfinder works for all chains when supplying exact IN to OUT pair.",
       throw error;
     }
   });
-  it("Pathfinder works on bsc", async () => {
-    try {
-      const pathfinder = new Pathfinder(56);
-      const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-        destinationAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
-        IN: true,
-      });
-      expect(path).toBeDefined();
-      expect(Array.isArray(path)).toBe(true);
-      expect(path.length).toBeGreaterThanOrEqual(2);
-    } catch (error) {
-      if (error.code && error.code === 1) {
-        return;
-      }
-      throw error;
-    }
-  });
+  // it("Pathfinder works on bsc", async () => {
+  //   try {
+  //     const pathfinder = new Pathfinder(56);
+  //     const path = await pathfinder.getTokenPath({
+  //       tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
+  //       destinationAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+  //       IN: true,
+  //     });
+  //     expect(path).toBeDefined();
+  //     expect(Array.isArray(path)).toBe(true);
+  //     expect(path.length).toBeGreaterThanOrEqual(2);
+  //   } catch (error) {
+  //     if (error.code && error.code === 1) {
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // });
   it("Pathfinder works on rinkeby", async () => {
     try {
       const pathfinder = new Pathfinder(4);
@@ -167,24 +167,24 @@ describe("Pathfinder works for all chains when supplying IN to exact OUT pair.",
       throw error;
     }
   });
-  it("Pathfinder works on bsc", async () => {
-    try {
-      const pathfinder = new Pathfinder(56);
-      const path = await pathfinder.getTokenPath({
-        tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-        destinationAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
-        IN: false,
-      });
-      expect(path).toBeDefined();
-      expect(Array.isArray(path)).toBe(true);
-      expect(path.length).toBeGreaterThanOrEqual(2);
-    } catch (error) {
-      if (error.code && error.code === 1) {
-        return;
-      }
-      throw error;
-    }
-  });
+  // it("Pathfinder works on bsc", async () => {
+  //   try {
+  //     const pathfinder = new Pathfinder(56);
+  //     const path = await pathfinder.getTokenPath({
+  //       tokenAddress: "0xdce07662ca8ebc241316a15b611c89711414dd1a",
+  //       destinationAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+  //       IN: false,
+  //     });
+  //     expect(path).toBeDefined();
+  //     expect(Array.isArray(path)).toBe(true);
+  //     expect(path.length).toBeGreaterThanOrEqual(2);
+  //   } catch (error) {
+  //     if (error.code && error.code === 1) {
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // });
   it("Pathfinder works on rinkeby", async () => {
     try {
       const pathfinder = new Pathfinder(4);
