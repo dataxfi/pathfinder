@@ -11,16 +11,16 @@ export default class Pathfinder {
   private userTokenOut: string;
   private chainId;
   private allPaths: string[][] = [];
-  private datax: Ocean;
+  private ocean: Ocean;
 
-  constructor(chainId: supportedChains, datax?: Ocean) {
+  constructor(chainId: supportedChains, web3?: Ocean) {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
-    this.datax = datax;
+    this.ocean = new Ocean(web3, chainId)
 
     switch (Number(this.chainId)) {
       case 4:
