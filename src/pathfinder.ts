@@ -10,6 +10,7 @@ export default class Pathfinder {
   private userTokenIn: string;
   private userTokenOut: string;
   private chainId;
+  private allPaths: string[][] = [];
   private datax: Ocean;
 
   constructor(chainId: supportedChains, datax?: Ocean) {
@@ -186,7 +187,7 @@ export default class Pathfinder {
         nextTokensToSearch,
       });
 
-      // recurse if results were >= 100
+      // recurse if results were >= 1000
       if (nextTokensToSearch && response.length >= 1000) {
         await this.getPoolData({
           tokenAddress,
@@ -211,14 +212,57 @@ export default class Pathfinder {
   }
 
   /**
-   * Gets token path for a swap pair.
+   * Gets token paths for a swap pair. Recursively calls itself until userTokenOut is found.
    * @param param0
    * @returns An array of tokens to be traded in order to route to the destination token in the shortest path possible.
+   */
+  private async getTokenPaths({
+    tokenAddress,
+    destinationAddress,
+    IN,
+    parentTokenAddress,
+    amt,
+  }: {
+    tokenAddress: string;
+    destinationAddress: string;
+    IN: boolean;
+    parentTokenAddress?: string;
+    amt?: string;
+  }): Promise<void> {
+    tokenAddress = tokenAddress.toLowerCase();
+    destinationAddress = destinationAddress.toLowerCase();
+
+    if (!this.userTokenIn) this.userTokenIn = tokenAddress;
+    if (!this.userTokenOut) this.userTokenOut = destinationAddress;
+
+    try {
+      const nextTokensToSearch = await this.getPoolData({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
+
+      if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
+        for (let [token, value] of Object.entries(nextTokensToSearch)) {
+          return this.getTokenPaths({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN });
+        }
+      } else if (this.pendingQueries.size === 0) {
+        const path = this.constructPath({ destination: this.userTokenOut });
+        if (path) {
+          this.allPaths.push(path);
+        }
+      }
+    } catch (error) {
+      // reject(error);
+      console.error(error);
+    }
+  }
+
+  /**
+   * Get best token path for swap pair. Awaits all results from getTokenPaths then 
+   * returns the shortest path.
+   * @param param0
+   * @returns
    */
   public async getTokenPath({
     tokenAddress,
     destinationAddress,
-    parentTokenAddress,
     amt,
     abortSignal,
     IN,
@@ -230,31 +274,15 @@ export default class Pathfinder {
     amt?: string;
     abortSignal?: AbortSignal;
   }): Promise<string[]> {
-    tokenAddress = tokenAddress.toLowerCase();
-    destinationAddress = destinationAddress.toLowerCase();
-
-    if (!this.userTokenIn) this.userTokenIn = tokenAddress;
-    if (!this.userTokenOut) this.userTokenOut = destinationAddress;
-
     return new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
-        reject(new Error("Aborted"));
+        return reject(new Error("Aborted"));
       });
 
-      try {
-        const nextTokensToSearch = await this.getPoolData({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
-
-        if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
-          for (let [token, value] of Object.entries(nextTokensToSearch)) {
-            // resolve();
-            this.getTokenPath({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN });
-          }
-        } else if (this.pendingQueries.size === 0) {
-          resolve(this.constructPath({ destination: this.userTokenOut }));
-        }
-      } catch (error) {
-        // reject(error);
-        console.error(error);
+      await this.getTokenPaths({ tokenAddress, destinationAddress, amt, IN });
+      if (this.pendingQueries.size === 0) {
+        const path = await this.resolveAllPaths();
+        resolve(path);
       }
     });
   }
@@ -279,13 +307,33 @@ export default class Pathfinder {
         path.unshift(parent);
         this.constructPath({ path });
       }
-      this.nodes = {};
-      this.tokensChecked = new Set();
-      this.userTokenIn = "";
-      this.userTokenOut = "";
       return path;
     } catch (error) {
       console.error(error);
     }
   }
+
+  private async resolveAllPaths() {
+    let shortestPath: string[];
+    const allPathsResolved = await Promise.allSettled(this.allPaths);
+    allPathsResolved.forEach(async (promise) => {
+      if (promise.status === "fulfilled") {
+        const path = promise.value;
+        if (!shortestPath || shortestPath.length > path.length) {
+          shortestPath = path;
+        }
+      }
+    });
+    return shortestPath;
+  }
 }
+
+const pathfinder = new Pathfinder(1);
+pathfinder
+  .getTokenPath({
+    tokenAddress: "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
+    destinationAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    IN: true,
+  })
+  .then((r) => console.log("response", r))
+  .catch(console.error);
