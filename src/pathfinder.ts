@@ -1,4 +1,5 @@
-import { Ocean } from "@dataxfi/datax.js";
+import { Trade } from "@dataxfi/datax.js";
+import Web3 from "@dataxfi/datax.js/node_modules/web3";
 import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, supportedChains } from "./@types";
 import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "./util";
 
@@ -11,16 +12,16 @@ export default class Pathfinder {
   private userTokenOut: string;
   private chainId;
   private allPaths: string[][] = [];
-  private ocean: Ocean;
+  private trade: Trade;
 
-  constructor(chainId: supportedChains, web3?: Ocean) {
+  constructor(chainId: supportedChains, web3: Web3) {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
-    this.ocean = new Ocean(web3, chainId)
+    this.trade = new Trade(web3, chainId);
 
     switch (Number(this.chainId)) {
       case 4:
@@ -97,6 +98,8 @@ export default class Pathfinder {
         for (let i = 0; i < poolsFromToken.length; i++) {
           const poolNode = poolsFromToken[i];
 
+          let t1IsIn = poolNode.t1Address === tokenAddress;
+
           if (this.nodes[tokenAddress]) {
             this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
           } else {
@@ -104,24 +107,27 @@ export default class Pathfinder {
             this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
           }
 
+          const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
+          //if exact token is token out, calculate what amount of the next token would be needed from the next pool
+          let nextAmt;
+          if (!IN) nextAmt = await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
+          if (!nextTokensToSearch[nextTokenAddress])
+            IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt[0] });
+
+          //if exact token is token in, check if there is enough liquidity to support this swap
+          if (IN) {
+            const amountOut = await this.trade.getAmountsOut(amt, [parentTokenAddress, nextTokenAddress]);
+            const liquidityNeeded = t1IsIn ? poolNode.t2Liquidity : poolNode.t1Liquidity;
+            if (amountOut[0] > liquidityNeeded) {
+              resolve(null);
+              return;
+            }
+          }
+
           if (poolNode.t1Address === destinationAddress || poolNode.t2Address === destinationAddress) {
             this.addTokenNode(destinationAddress, tokenAddress);
             resolve(null);
-          }
-
-          const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
-
-          //calculate what amount of the next token would be needed from the next pool
-          let nextAmt;
-          if (!IN) nextAmt = "1"; //calculateSwap()
-          if (!nextTokensToSearch[nextTokenAddress])
-            IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt });
-
-          //add node to tree
-          if (IN) {
-            let hasEnoughLiquidity;
-            //todo: calculateSwap and check if there is enough liquidity
-            // if (!hasEnoughLiquidity) break;
+            return;
           }
         }
 
@@ -249,13 +255,12 @@ export default class Pathfinder {
         }
       }
     } catch (error) {
-      // reject(error);
       console.error(error);
     }
   }
 
   /**
-   * Get best token path for swap pair. Awaits all results from getTokenPaths then 
+   * Get best token path for swap pair. Awaits all results from getTokenPaths then
    * returns the shortest path.
    * @param param0
    * @returns

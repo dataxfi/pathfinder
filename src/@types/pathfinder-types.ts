@@ -26,4 +26,4 @@ export interface IBFSResults {
   [key: string]: IBFSResultPoolNode;
 }
 
-export type supportedChains = 1 | "1" | 4 | "4" | 56 | "56" | 137 | "137" | 246 | "246" | 1285 | "1285";
+export type supportedChains = "1" | "4" | "56" | "137" | "246" | "1285";

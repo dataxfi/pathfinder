@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@dataxfi/datax.js": "^1.1.34",
-    "axios": "^0.26.1"
+    "axios": "^0.26.1",
+    "web3": "^1.7.3"
   }
 }
