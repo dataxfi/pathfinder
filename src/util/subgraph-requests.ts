@@ -1,6 +1,6 @@
 import axios from "axios";
 import { formatter } from "./request-response-format";
-import { otherChainsQuery, uniswapQuery } from "./subgraph-request-format";
+import { otherChainsQuery, uniswapQuery } from "./subgraph-request-composer";
 
 /**
  * Returns an axios response from the url provided.
