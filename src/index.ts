@@ -1,2 +1,2 @@
-import Pathfinder from "./pathfinder";
+import Pathfinder from "./Pathfinder";
 export { Pathfinder };

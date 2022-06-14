@@ -21,7 +21,7 @@ export default class Pathfinder {
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
-    this.trade = new Trade(web3, chainId);
+    // this.trade = new Trade(web3, chainId);
 
     switch (Number(this.chainId)) {
       case 4:
@@ -110,19 +110,19 @@ export default class Pathfinder {
           const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
           //if exact token is token out, calculate what amount of the next token would be needed from the next pool
           let nextAmt;
-          if (!IN) nextAmt = await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
+          if (!IN) nextAmt = "1" //await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
           if (!nextTokensToSearch[nextTokenAddress])
             IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt[0] });
 
-          //if exact token is token in, check if there is enough liquidity to support this swap
-          if (IN) {
-            const amountOut = await this.trade.getAmountsOut(amt, [parentTokenAddress, nextTokenAddress]);
-            const liquidityNeeded = t1IsIn ? poolNode.t2Liquidity : poolNode.t1Liquidity;
-            if (amountOut[0] > liquidityNeeded) {
-              resolve(null);
-              return;
-            }
-          }
+          // //if exact token is token in, check if there is enough liquidity to support this swap
+          // if (IN) {
+          //   const amountOut = await this.trade.getAmountsOut(amt, [parentTokenAddress, nextTokenAddress]);
+          //   const liquidityNeeded = t1IsIn ? poolNode.t2Liquidity : poolNode.t1Liquidity;
+          //   if (amountOut[0] > liquidityNeeded) {
+          //     resolve(null);
+          //     return;
+          //   }
+          // }
 
           if (poolNode.t1Address === destinationAddress || poolNode.t2Address === destinationAddress) {
             this.addTokenNode(destinationAddress, tokenAddress);

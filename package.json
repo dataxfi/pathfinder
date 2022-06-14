@@ -1,11 +1,11 @@
 {
   "name": "@dataxfi/pathfinder",
   "version": "1.0.0",
-  "author": "Keith Frazier",
-  "license": "Apache",
+  "author": "DataX Finance (https://datax.fi)",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
+  "exports":{
     ".": "./dist/index.js"
   },
   "scripts": {

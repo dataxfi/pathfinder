@@ -1,4 +1,4 @@
-import Pathfinder from "../../pathfinder";
+import Pathfinder from "../../Pathfinder";
 import Web3 from "@dataxfi/datax.js/node_modules/web3";
 import ganache from "ganache-core";
 describe("Pathfinder works for all chains when supplying exact IN to OUT pair.", () => {
