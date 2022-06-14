@@ -1,9 +1,13 @@
 {
   "name": "@dataxfi/pathfinder",
   "version": "1.0.0",
-  "main": "index.js",
   "author": "Keith Frazier",
   "license": "Apache",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "scripts": {
     "build": "yarn tsc",
     "test": "yarn jest --detectOpenHandles"

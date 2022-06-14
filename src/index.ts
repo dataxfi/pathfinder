@@ -1,1 +1,2 @@
-export * from "./pathfinder";
+import Pathfinder from "./pathfinder";
+export { Pathfinder };
