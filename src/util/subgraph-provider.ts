@@ -1,5 +1,5 @@
-import { formatter } from "./request-response-format";
-import { otherChainsReq, uniswapSchemaReq } from "./subgraph-requests";
+import { formatter } from "./format-response";
+import { uniswapV2Req, uniswapV3Req } from "./subgraph-requests";
 import rinkeby from "./rinkeby.json";
 
 /**
@@ -8,7 +8,7 @@ import rinkeby from "./rinkeby.json";
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
 export async function energywebPools(address: string, amt: string = "0.001") {
-  return otherChainsReq("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt);
+  return uniswapV3Req("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt);
 }
 
 /**
@@ -18,7 +18,7 @@ export async function energywebPools(address: string, amt: string = "0.001") {
  */
 
 export async function maticPools(address: string, amt: string = "0.001") {
-  return otherChainsReq("https://polygon.furadao.org/subgraphs/name/quickswap", address, amt);
+  return uniswapV2Req("https://polygon.furadao.org/subgraphs/name/quickswap", address, amt);
 }
 /**
  * Returns set of all pools which contain provided address from mainnet (1)
@@ -26,7 +26,7 @@ export async function maticPools(address: string, amt: string = "0.001") {
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
 export async function mainnetPools(address: string, amt: string = "0.001") {
-  return uniswapSchemaReq("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", address, amt);
+  return uniswapV2Req("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", address, amt);
 }
 
 /**
@@ -35,7 +35,7 @@ export async function mainnetPools(address: string, amt: string = "0.001") {
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
 export async function bscPools(address: string, amt: string = "0.001") {
-  return otherChainsReq("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt);
+  return uniswapV3Req("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt);
 }
 
 /**
@@ -44,7 +44,7 @@ export async function bscPools(address: string, amt: string = "0.001") {
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
 export async function moonriverPools(address: string, amt: string = "0.001") {
-  return otherChainsReq("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
+  return uniswapV3Req("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt);
 }
 
 /**
@@ -53,12 +53,14 @@ export async function moonriverPools(address: string, amt: string = "0.001") {
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
 
-export async function rinkebyPools(address: string) {
-  const pools = rinkeby[address];
-  //TODO: Traverse pools to request and set total locked tokens:
-  //TODO: "totalValueLockedToken0": (x)
-  //TODO: "totalValueLockedToken1": (x)
-  const data = { data: { data: { ...pools } } };
+export async function rinkebyPools(address: string, amt: string = ".001") {
+  // const pools = rinkeby[address];
+  // //TODO: Traverse pools to request and set total locked tokens:
+  // //TODO: "totalValueLockedToken0": (x)
+  // //TODO: "totalValueLockedToken1": (x)
+  // const data = { data: { data: { ...pools } } };
 
-  return formatter(data);
+  // return formatter(data);
+
+  return uniswapV3Req("https://api.thegraph.com/subgraphs/name/mtahon/uniswap-v3-rinkeby", address, amt);
 }

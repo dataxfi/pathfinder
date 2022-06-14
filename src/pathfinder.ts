@@ -14,7 +14,7 @@ export default class Pathfinder {
   private allPaths: string[][] = [];
   private trade: Trade;
 
-  constructor(chainId: supportedChains, web3: Web3) {
+  constructor(chainId: supportedChains, web3?: Web3) {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
@@ -110,7 +110,7 @@ export default class Pathfinder {
           const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
           //if exact token is token out, calculate what amount of the next token would be needed from the next pool
           let nextAmt;
-          if (!IN) nextAmt = "1" //await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
+          if (!IN) nextAmt = "1"; //await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
           if (!nextTokensToSearch[nextTokenAddress])
             IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt[0] });
 
@@ -180,6 +180,10 @@ export default class Pathfinder {
 
       // fetch results (200 max default)
       const response = await this.fetchFunction(tokenAddress, amt);
+      if (!response) {
+        throw new Error("Failed to retrieve subgraph data.");
+      }
+      console.log(response);
       poolsFromToken.push(...response);
 
       // search results for destination
@@ -333,11 +337,11 @@ export default class Pathfinder {
   }
 }
 
-// const pathfinder = new Pathfinder(1);
+// const pathfinder = new Pathfinder("1");
 // pathfinder
 //   .getTokenPath({
 //     tokenAddress: "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
-//     destinationAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+//     destinationAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
 //     IN: true,
 //   })
 //   .then((r) => console.log("response", r))
