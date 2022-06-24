@@ -1,5 +1,5 @@
 import { Trade } from "@dataxfi/datax.js";
-import Web3 from "@dataxfi/datax.js/node_modules/web3";
+import Web3 from "web3";
 import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, supportedChains } from "./@types";
 import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "./util";
 
@@ -283,6 +283,9 @@ export default class Pathfinder {
     amt?: string;
     abortSignal?: AbortSignal;
   }): Promise<string[]> {
+    if (tokenAddress.toLowerCase() === destinationAddress.toLowerCase()) {
+      throw new Error("Token in is token out, no path needed.")
+    }
     return new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
         return reject(new Error("Aborted"));
