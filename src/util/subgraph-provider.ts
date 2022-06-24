@@ -54,13 +54,5 @@ export async function moonriverPools(address: string, amt: string = "0.001") {
  */
 
 export async function rinkebyPools(address: string, amt: string = ".001") {
-  // const pools = rinkeby[address];
-  // //TODO: Traverse pools to request and set total locked tokens:
-  // //TODO: "totalValueLockedToken0": (x)
-  // //TODO: "totalValueLockedToken1": (x)
-  // const data = { data: { data: { ...pools } } };
-
-  // return formatter(data);
-
   return uniswapV3Req("https://api.thegraph.com/subgraphs/name/mtahon/uniswap-v3-rinkeby", address, amt);
 }

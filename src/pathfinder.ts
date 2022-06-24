@@ -337,11 +337,11 @@ export default class Pathfinder {
   }
 }
 
-// const pathfinder = new Pathfinder("1");
+// const pathfinder = new Pathfinder("137");
 // pathfinder
 //   .getTokenPath({
-//     tokenAddress: "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
-//     destinationAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+//     tokenAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+//     destinationAddress: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
 //     IN: true,
 //   })
 //   .then((r) => console.log("response", r))
