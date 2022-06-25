@@ -7,9 +7,9 @@
  * @returns a query as a string
  */
 
-export function uniswapV2Query(address: string, amt: string, first: number = 1000, skip: number = 0) {
+export function uniswapV2Query(address: string, amt: string, skipT0: number = 0, skipT1: number = 0, callT0: boolean = true, callT1: boolean = true) {
   console.log("Calling with v2 schema (pairs)");
-  
+  console.log(address, amt, skipT0, skipT1, callT0, callT1)
   const generalReq = `orderBy:reserveUSD
   orderDirection:desc){
       id
@@ -22,17 +22,23 @@ export function uniswapV2Query(address: string, amt: string, first: number = 100
 
     totalValueLockedToken0:reserve0
     totalValueLockedToken1:reserve1
-  }`
-  return `
+  }`;
+
+  const t0Match = `t0IsMatch: pairs(first:1000 skip:${skipT0} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
+  ${generalReq}`;
+
+  const t1Match = `t1IsMatch: pairs(first:1000 skip:${skipT1} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
+  ${generalReq}`;
+
+  const query = `
   query {
-    t0IsMatch: pairs(first:${first} skip:${skip} where:{token0_contains:"${address}", reserve0_gt:"${amt}"}
-    ${generalReq}
-    
-    
-    t1IsMatch: pairs(first:${first} skip:${skip} where:{token1_contains:"${address}", reserve1_gt:"${amt}"}
-    ${generalReq}
+    ${callT0 ? t0Match : ""}
+
+    ${callT1 ? t1Match : ""}
   }
   `;
+  console.log(query)
+  return query
 }
 
 /**
@@ -44,7 +50,7 @@ export function uniswapV2Query(address: string, amt: string, first: number = 100
  * @returns a query as a string
  */
 
-export function uniswapV3Query(address: string, amt: string, first: number = 1000, skip: number = 0) {
+export function uniswapV3Query(address: string, amt: string, skipT0: number = 0, skipT1: number = 0, callT0: boolean = true, callT1: boolean = true) {
   console.log("Calling with v3 schema (pools)");
 
   const generalReq = `orderBy: totalValueLockedUSD
@@ -62,14 +68,17 @@ export function uniswapV3Query(address: string, amt: string, first: number = 100
       totalValueLockedToken1
     }`;
 
+  const t0Match = `t0IsMatch: pools(first:1000 skip:${skipT0} where:{token0_in:["${address}"],
+    totalValueLockedToken0_gt:"${amt}"}     
+    ${generalReq}`;
+
+  const t1Match = `t1IsMatch: pools(first:1000 skip:${skipT1} where:{token1_in:["${address}"], 
+  totalValueLockedToken1_gt:"${amt}"}   
+  ${generalReq}`;
+
   return `query {
-      t0IsMatch: pools(first:${first} skip:${skip} where:{token0_in:["${address}"],
-      totalValueLockedToken0_gt:"${amt}"}     
-      ${generalReq}
+      ${callT0 ? t0Match : ""}
       
-      
-      t1IsMatch: pools(first:${first} skip:${skip} where:{token1_in:["${address}"], 
-      totalValueLockedToken1_gt:"${amt}"}   
-      ${generalReq}
+      ${callT1 ? t1Match : ""}
     }`;
 }

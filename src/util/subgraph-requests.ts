@@ -7,12 +7,12 @@ import { uniswapV2Query, uniswapV3Query } from "./subgraph-queries";
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-export async function uniswapV2Req(url: string, address: string, amt: string) {
+export async function uniswapV2Req(url: string, address: string, amt: string, skipT0: number, skipT1: number, callT0: boolean, callT1: boolean) {
   try {
     const response = await axios.post(
       url,
       {
-        query: uniswapV2Query(address, amt),
+        query: uniswapV2Query(address, amt, skipT0, skipT1, callT0, callT1),
       },
       { timeout: 600000 }
     );
@@ -28,12 +28,12 @@ export async function uniswapV2Req(url: string, address: string, amt: string) {
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-export async function uniswapV3Req(url: string, address: string, amt: string) {
+export async function uniswapV3Req(url: string, address: string, amt: string, skipT0: number, skipT1: number, callT0: boolean, callT1: boolean) {
   try {
     const uniswap = await axios.post(
       url,
       {
-        query: uniswapV3Query(address, amt),
+        query: uniswapV3Query(address, amt, skipT0, skipT1, callT0, callT1),
       },
       { timeout: 600000 }
     );
