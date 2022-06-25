@@ -345,6 +345,11 @@ export default class Pathfinder {
       });
 
       this.depth = 0;
+      this.nodes = undefined
+      this.pathFound = false
+      this.allPaths = []
+      this.tokensChecked = new Set()
+
       tokenAddress = tokenAddress.toLowerCase();
       destinationAddress = destinationAddress.toLowerCase();
 
