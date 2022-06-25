@@ -16,7 +16,7 @@ export async function uniswapV2Req(url: string, address: string, amt: string, sk
       },
       { timeout: 600000 }
     );
-    console.info("Response for token" + address + ":" + response);
+    // console.info("Response for token" + address + ":" + response);
     return formatter(response);
   } catch (error) {
     console.error(error);
@@ -37,7 +37,7 @@ export async function uniswapV3Req(url: string, address: string, amt: string, sk
       },
       { timeout: 600000 }
     );
-    console.info("Response for token" + address + ":" + uniswap);
+    // console.info("Response for token" + address + ":" + uniswap);
     return formatter(uniswap);
   } catch (error) {
     console.error(error);

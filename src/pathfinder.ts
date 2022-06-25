@@ -91,7 +91,7 @@ export default class Pathfinder {
     amt?: string;
   }): Promise<INextTokensToSearch | null> {
     //console.log("searchPoolData was called with (nextTokensToSearch): ");
-    console.dir(nextTokensToSearch);
+    // console.dir(nextTokensToSearch);
     return new Promise(async (resolve, reject) => {
       //console.log("Inside pool search function.");
       try {
