@@ -2,7 +2,7 @@ import { Trade } from "@dataxfi/datax.js";
 import Web3 from "web3";
 import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "./@types";
 import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "./util";
-import fs from "fs";
+// import fs from "fs";
 export default class Pathfinder {
   private fetchFunction: queryFunction;
   public nodes: ITokenGraph;
@@ -308,7 +308,7 @@ export default class Pathfinder {
         }
       } else if (this.pendingQueries.size === 0) {
         //console.log("pending query size is : ", this.pendingQueries.size, "calling construct path with", this.userTokenOut);
-        fs.writeFileSync("data.json", JSON.stringify(this.nodes));
+        // fs.writeFileSync("data.json", JSON.stringify(this.nodes));
         const path = this.constructPath({ destination: this.userTokenOut });
         if (path) {
           this.allPaths.push(path);
