@@ -345,7 +345,7 @@ export default class Pathfinder {
       });
 
       this.depth = 0;
-      this.nodes = undefined
+      this.nodes = {}
       this.pathFound = false
       this.allPaths = []
       this.tokensChecked = new Set()
