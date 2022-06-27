@@ -2,7 +2,7 @@ import { formatter } from "./format-response";
 import { uniswapV2Req, uniswapV3Req } from "./subgraph-requests";
 import rinkeby from "./rinkeby.json";
 
-const minAmt = '10'
+const minAmt = '100'
 
 /**
  * Returns set of all pools which contain provided address from Energyweb chain (246)
