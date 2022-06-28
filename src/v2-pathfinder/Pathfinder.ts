@@ -1,7 +1,7 @@
 import { Trade } from "@dataxfi/datax.js";
 import Web3 from "web3";
-import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "./@types";
-import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "./util";
+import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "../@types";
+import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "../util";
 // import fs from "fs";
 export default class Pathfinder {
   private fetchFunction: queryFunction;

@@ -1,21 +1,30 @@
 {
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "lib": ["es2017", "es6", "es7", "dom"],
-    "declaration": true,
-    "module": "commonjs",
-    "target": "es5",
-    "removeComments": true,
+    "declaration": false,
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "preserveConstEnums": true,
-    "outDir": "./dist/",
-    "rootDir": "./src/",
+    "lib": [
+      "dom",
+      "es2015"
+    ],
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "sourceMap": true,
-    "typeRoots": ["node_modules/@types"]
+    "target": "es5",
+    "typeRoots": [
+      "../node_modules/@types"
+    ], 
+    "outDir": "./dist", 
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "include": [
+    "src/**/*.ts"
+, "index.ts"  ],
+  "exclude": [
+    "node_modules",
+    "src/**/*.spec.ts",
+    "src/test/"
+  ],
+  "compileOnSave": false,
 }

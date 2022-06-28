@@ -1,6 +1,5 @@
 import { formatter } from "./format-response";
 import { uniswapV2Req, uniswapV3Req } from "./subgraph-requests";
-import rinkeby from "./rinkeby.json";
 
 const minAmt = '100'
 
