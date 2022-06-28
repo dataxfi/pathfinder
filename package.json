@@ -22,6 +22,7 @@
   "dependencies": {
     "@dataxfi/datax.js": "^1.2.4",
     "axios": "^0.26.1",
+    "express": "^4.18.1",
     "web3": "^1.7.4"
   }
 }
