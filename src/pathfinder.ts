@@ -255,16 +255,29 @@ export default class Pathfinder {
       this.pendingQueries.delete(tokenAddress);
       this.tokensChecked.add(tokenAddress);
 
-      //2. there are no more pools for the token, so the pools for each other token in the pools already searched needs to be fetched and searched
+      //2. there are no more pools for the current token, so the pools at the next depth need to be searched
       // iterate through next tokens to search, search every token this token has pools with before going deeper (most likely has pool with native)
       if (!skipRecurse && nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
+        const promises = [];
         for (let [token, value] of Object.entries(nextTokensToSearch)) {
-          //console.log("Iterating through next tokens to search", token, value);
-          if (this.pathFound) return;
-          const nextBatch = await this.getPoolData({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN, skipRecurse: true });
-          //console.log("next batch is truthy:", !!nextBatch);
-          nextBatch ? (nextTokensToSearch = { ...nextTokensToSearch, ...nextBatch }) : (nextTokensToSearch = null);
+          // push a promise for each request to getPoolData to promises array
+          promises.push(this.getPoolData({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN, skipRecurse: true }));
         }
+        
+        // check if token was found or aggregate next pools to search
+        const allSettled = await Promise.allSettled(promises);
+        const tokenFound = allSettled.some((batch) => {
+          if (batch.status === "fulfilled") {
+            if (batch.value === null) {
+              return true;
+            } else {
+              nextTokensToSearch = { ...nextTokensToSearch, ...batch.value };
+            }
+          }
+        });
+
+        // if pool is found there are no next tokens to search
+        if (tokenFound) nextTokensToSearch = null;
       }
 
       return nextTokensToSearch;
@@ -370,7 +383,7 @@ export default class Pathfinder {
         const path = await this.resolveAllPaths();
         return resolve(path);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     });
   }
@@ -405,7 +418,7 @@ export default class Pathfinder {
     let shortestPath: string[];
     //console.log("All possible paths:", this.allPaths);
     const allPathsResolved = await Promise.allSettled(this.allPaths);
-    allPathsResolved.forEach(async (promise) => {
+    allPathsResolved.forEach((promise) => {
       if (promise.status === "fulfilled") {
         const path = promise.value;
         if (!shortestPath || shortestPath.length > path.length) {
@@ -422,8 +435,8 @@ export default class Pathfinder {
 // pathfinder
 //   .getTokenPath({
 //     tokenAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//     destinationAddress: "0x8f9E8e833A69Aa467E42c46cCA640da84DD4585f",
+//     destinationAddress: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
 //     IN: true,
 //   })
-//   .then((r) => //console.log("response", r))
+//   .then((r) => console.log("response", r))
 //   .catch(console.error);
