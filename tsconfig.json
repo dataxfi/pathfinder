@@ -15,7 +15,7 @@
     "typeRoots": [
       "../node_modules/@types"
     ], 
-    "outDir": "./dist", 
+    "outDir": "./public", 
     "resolveJsonModule": true
   },
   "include": [
