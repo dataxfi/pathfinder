@@ -9,7 +9,7 @@
     "routes": [
       {
         "src": "api/pathfinder/v2",
-        "dest": "index.js"
+        "dest": "public/index.js"
       }
     ]
   }
