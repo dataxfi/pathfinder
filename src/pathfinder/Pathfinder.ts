@@ -1,4 +1,3 @@
-import { Trade } from "@dataxfi/datax.js";
 import Web3 from "web3";
 import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "../@types";
 import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "../util";
@@ -12,11 +11,10 @@ export default class Pathfinder {
   private userTokenOut: string;
   private chainId;
   private allPaths: string[][] = [];
-  private trade: Trade;
   private depth: number = 0;
   private pathFound: boolean = false;
 
-  constructor(chainId: supportedChains, web3?: Web3) {
+  constructor(chainId: supportedChains) {
     this.nodes = {};
     this.tokensChecked = new Set();
     this.pendingQueries = new Set();
