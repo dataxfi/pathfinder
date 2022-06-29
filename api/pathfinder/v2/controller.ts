@@ -24,6 +24,6 @@ export const post = asyncErrorBoundary(async (req, res) => {
 
   res.json({
     status: 200,
-    body: { data: { path } },
+    path,
   });
 });
