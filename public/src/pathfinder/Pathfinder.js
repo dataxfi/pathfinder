@@ -201,6 +201,7 @@ var Pathfinder = /** @class */ (function () {
                         return [4 /*yield*/, this.fetchFunction(tokenAddress, amt, skipT0, skipT1, callT0, callT1)];
                     case 2:
                         response = _h.sent();
+                        console.log("Response for " + tokenAddress, response);
                         t0MatchLength = 0, t1MatchLength = 0, allMatchedPools = [];
                         if (response.t0MatchLength)
                             t0MatchLength = response.t0MatchLength;

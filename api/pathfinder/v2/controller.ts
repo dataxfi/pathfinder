@@ -22,7 +22,7 @@ export const post = asyncErrorBoundary(async (req, res) => {
     amt,
   });
 
-  if (path.length > 0) {
+  if (path) {
     res.json({
       status: 200,
       path,

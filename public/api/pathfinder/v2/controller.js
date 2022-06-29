@@ -67,10 +67,18 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
                     })];
             case 1:
                 path = _b.sent();
-                res.json({
-                    status: 200,
-                    path: path,
-                });
+                if (path) {
+                    res.json({
+                        status: 200,
+                        path: path,
+                    });
+                }
+                else {
+                    res.json({
+                        status: 200,
+                        path: null,
+                    });
+                }
                 return [2 /*return*/];
         }
     });

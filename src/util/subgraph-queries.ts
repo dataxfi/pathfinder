@@ -24,10 +24,10 @@ export function uniswapV2Query(address: string, amt: string, skipT0: number = 0,
     totalValueLockedToken1:reserve1
   }`;
 
-  const t0Match = `t0IsMatch: pairs(first:1000 skip:${skipT0} where:{token0_contains:"${address}", volumeUSD_gt:"1000000" reserve0_gt:"${amt}"}
+  const t0Match = `t0IsMatch: pairs(first:1000 skip:${skipT0} where:{token0_contains:"${address}", volumeUSD_gt:"100000" reserve0_gt:"${amt}"}
   ${generalReq}`;
 
-  const t1Match = `t1IsMatch: pairs(first:1000 skip:${skipT1} where:{token1_contains:"${address}", volumeUSD_gt:"1000000" reserve1_gt:"${amt}"}
+  const t1Match = `t1IsMatch: pairs(first:1000 skip:${skipT1} where:{token1_contains:"${address}", volumeUSD_gt:"100000" reserve1_gt:"${amt}"}
   ${generalReq}`;
 
   const query = `

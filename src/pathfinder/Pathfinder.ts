@@ -188,7 +188,7 @@ export default class Pathfinder {
       // add token address to pending queries and call fetch function with address
       this.pendingQueries.add(tokenAddress);
       const response = await this.fetchFunction(tokenAddress, amt, skipT0, skipT1, callT0, callT1);
-      //console.log("Response for " + tokenAddress, response);
+      // console.log("Response for " + tokenAddress, response);
 
       let t0MatchLength: number = 0,
         t1MatchLength: number = 0,

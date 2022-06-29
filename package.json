@@ -11,7 +11,7 @@
   "scripts": {
     "build": "yarn tsc",
     "prestart": "yarn run build",
-    "start": "node dist/index.js",
+    "start": "node public/index.js",
     "test": "yarn jest --detectOpenHandles"
   },
   "devDependencies": {
