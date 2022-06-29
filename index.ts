@@ -1,6 +1,6 @@
 import * as express from "express";
 import * as cors from "cors";
-import { v2_router } from "./api";
+import { v2_router } from "./api/pathfinder/v2/router";
 import { notFound, errorHandler } from "./src/errors";
 
 const app = express();
