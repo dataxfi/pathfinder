@@ -8,7 +8,7 @@
     ],
     "routes": [
       {
-        "src": "api/pathfinder/v2",
+        "src": "/(.*)",
         "dest": "index.ts"
       }
     ]
