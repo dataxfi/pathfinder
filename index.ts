@@ -1,15 +1,14 @@
 import * as express from "express";
 import * as cors from "cors";
 import { v2_router } from "./api";
-import { notFound, errorHandler } from "./errors";
-import dotenv from 'dotenv'
+import { notFound, errorHandler } from "./src/errors";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/v2", v2_router);
+app.use("/api/pathfinder/v2", v2_router);
 
 app.use(notFound);
 app.use(errorHandler);

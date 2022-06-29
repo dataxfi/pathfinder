@@ -37,7 +37,7 @@ export function uniswapV2Query(address: string, amt: string, skipT0: number = 0,
     ${callT1 ? t1Match : ""}
   }
   `;
-  console.log(query)
+  // console.log(query)
   return query
 }
 

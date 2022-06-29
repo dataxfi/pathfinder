@@ -1,4 +1,3 @@
-import { formatter } from "./format-response";
 import { uniswapV2Req, uniswapV3Req } from "./subgraph-requests";
 
 const minAmt = '100'

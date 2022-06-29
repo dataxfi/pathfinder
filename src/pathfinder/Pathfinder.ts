@@ -431,13 +431,13 @@ export default class Pathfinder {
   }
 }
 
-const pathfinder = new Pathfinder("137");
-pathfinder
-  .getTokenPath({
-    tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
-    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-    IN: true,
-  })
-  .then((r) => console.log("response", r))
-  .catch(console.error);
+// const pathfinder = new Pathfinder("137");
+// pathfinder
+//   .getTokenPath({
+//     tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+//     IN: true,
+//   })
+//   .then((r) => console.log("response", r))
+//   .catch(console.error);
 

@@ -1,1 +1,1 @@
-export * from "./v2-pathfinder";
+export * from "./pathfinder/v2/router";
