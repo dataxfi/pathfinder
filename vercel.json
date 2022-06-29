@@ -1,3 +1,15 @@
 {
-  "functions": { "api/pathfinder/v2/index.ts": { "memory": 3008, "maxDuration": 15 } }
-}
+    "version": 2,
+    "builds": [
+      {
+        "src": "public/index.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "api/pathfinder/v2",
+        "dest": "index.js"
+      }
+    ]
+  }
