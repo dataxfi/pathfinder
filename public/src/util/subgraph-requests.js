@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uniswapV3Req = exports.uniswapV2Req = void 0;
+exports.uniswapV2Req = void 0;
 var axios_1 = require("axios");
 var format_response_1 = require("./format-response");
 var subgraph_queries_1 = require("./subgraph-queries");
@@ -45,7 +45,7 @@ var subgraph_queries_1 = require("./subgraph-queries");
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function uniswapV2Req(url, address, amt, skipT0, skipT1, callT0, callT1) {
+function uniswapV2Req(url, address, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
         var response, error_1;
         return __generator(this, function (_a) {
@@ -53,12 +53,12 @@ function uniswapV2Req(url, address, amt, skipT0, skipT1, callT0, callT1) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
                     return [4 /*yield*/, axios_1.default.post(url, {
-                            query: (0, subgraph_queries_1.uniswapV2Query)(address, amt, skipT0, skipT1, callT0, callT1),
+                            query: (0, subgraph_queries_1.uniswapV2Query)(address, skipT0, skipT1, callT0, callT1),
                         }, { timeout: 600000 })];
                 case 1:
                     response = _a.sent();
                     // console.info("Response for token" + address + ":" + response);
-                    return [2 /*return*/, (0, format_response_1.formatter)(response)];
+                    return [2 /*return*/, (0, format_response_1.formatter)(response, address)];
                 case 2:
                     error_1 = _a.sent();
                     console.error(error_1);
@@ -74,28 +74,19 @@ exports.uniswapV2Req = uniswapV2Req;
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function uniswapV3Req(url, address, amt, skipT0, skipT1, callT0, callT1) {
-    return __awaiter(this, void 0, void 0, function () {
-        var uniswap, error_2;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, axios_1.default.post(url, {
-                            query: (0, subgraph_queries_1.uniswapV3Query)(address, amt, skipT0, skipT1, callT0, callT1),
-                        }, { timeout: 600000 })];
-                case 1:
-                    uniswap = _a.sent();
-                    // console.info("Response for token" + address + ":" + uniswap);
-                    return [2 /*return*/, (0, format_response_1.formatter)(uniswap)];
-                case 2:
-                    error_2 = _a.sent();
-                    console.error(error_2);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.uniswapV3Req = uniswapV3Req;
+// export async function uniswapV3Req(url: string, address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   try {
+//     const uniswap = await axios.post(
+//       url,
+//       {
+//         query: uniswapV3Query(address, skipT0, skipT1, callT0, callT1),
+//       },
+//       { timeout: 600000 }
+//     );
+//     // console.info("Response for token" + address + ":" + uniswap);
+//     return formatter(uniswap);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
 //# sourceMappingURL=subgraph-requests.js.map

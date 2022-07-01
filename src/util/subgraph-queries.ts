@@ -7,8 +7,8 @@
  * @returns a query as a string
  */
 
-export function uniswapV2Query(address: string, amt: string, skipT0: number = 0, skipT1: number = 0, callT0: boolean = true, callT1: boolean = true) {
-  // console.log("Calling with v2 schema (pairs)");
+export function uniswapV2Query(addresses: string[], skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
+  console.log("Calling with v2 schema (pairs)");
   // console.log(address, amt, skipT0, skipT1, callT0, callT1)
   const generalReq = `orderBy:reserveUSD
   orderDirection:desc){
@@ -24,21 +24,28 @@ export function uniswapV2Query(address: string, amt: string, skipT0: number = 0,
     totalValueLockedToken1:reserve1
   }`;
 
-  const t0Match = `t0IsMatch: pairs(first:1000 skip:${skipT0} where:{token0_contains:"${address}", volumeUSD_gt:"100000" reserve0_gt:"${amt}"}
-  ${generalReq}`;
+  const queries = [];
 
-  const t1Match = `t1IsMatch: pairs(first:1000 skip:${skipT1} where:{token1_contains:"${address}", volumeUSD_gt:"100000" reserve1_gt:"${amt}"}
-  ${generalReq}`;
+  addresses.forEach((address, index) => {
+    const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:${skipT0[index]} where:{token0_contains:"${address}", volumeUSD_gt:"10000"}
+    ${generalReq}`;
+
+    const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:${skipT1[index]} where:{token1_contains:"${address}", volumeUSD_gt:"10000"}
+    ${generalReq}`;
+
+    queries.push(`
+    ${callT0[index] ? t0Match : ""}
+    ${callT1[index] ? t1Match : ""}
+    `);
+  });
 
   const query = `
-  query {
-    ${callT0 ? t0Match : ""}
-
-    ${callT1 ? t1Match : ""}
-  }
+    query {
+      ${queries.join("\n")}
+    }
   `;
   // console.log(query)
-  return query
+  return query;
 }
 
 /**
@@ -50,7 +57,7 @@ export function uniswapV2Query(address: string, amt: string, skipT0: number = 0,
  * @returns a query as a string
  */
 
-export function uniswapV3Query(address: string, amt: string, skipT0: number = 0, skipT1: number = 0, callT0: boolean = true, callT1: boolean = true) {
+export function uniswapV3Query(addresses: string[], skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
   console.log("Calling with v3 schema (pools)");
 
   const generalReq = `orderBy: totalValueLockedUSD
@@ -68,12 +75,11 @@ export function uniswapV3Query(address: string, amt: string, skipT0: number = 0,
       totalValueLockedToken1
     }`;
 
-  const t0Match = `t0IsMatch: pools(first:1000 skip:${skipT0} where:{token0_in:["${address}"],
-    totalValueLockedToken0_gt:"${amt}"}     
-    ${generalReq}`;
+    //TODO: Update this use array inputs
+  const t0Match = `t0IsMatch: pools(first:1000 skip:${skipT0} where:{token0_in:["${addresses}"]}
+  ${generalReq}`;
 
-  const t1Match = `t1IsMatch: pools(first:1000 skip:${skipT1} where:{token1_in:["${address}"], 
-  totalValueLockedToken1_gt:"${amt}"}   
+  const t1Match = `t1IsMatch: pools(first:1000 skip:${skipT1} where:{token1_in:["${addresses}"]}   
   ${generalReq}`;
 
   return `query {

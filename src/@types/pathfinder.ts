@@ -1,13 +1,12 @@
 export interface IPoolNode {
-  poolAddress: string;
-  t1Address: string;
-  t2Address: string;
-  t1Liquidity: string;
-  t2Liquidity: string;
-  edges: Set<string>;
+  id: string;
+  token0: { id: string };
+  token1: { id: string };
+  totalValueLockedToken0: string;
+  totalValueLockedToken1: string;
 }
 export interface INextTokensToSearch {
-  [tokenAdress: number]: { parentToken: string; amt?: number };
+  [tokenAdress: number]: { parentToken: string;};
 }
 
 export interface IPoolGraph {
@@ -27,10 +26,10 @@ export interface IBFSResults {
 }
 
 export interface queryParams {
-    skipT0: number;
-    skipT1: number;
-    callT0: boolean;
-    callT1: boolean;
+  skipT0: number[];
+  skipT1: number[];
+  callT0: boolean[];
+  callT1: boolean[];
 }
 
 export interface requestResponse {
@@ -39,5 +38,5 @@ export interface requestResponse {
   allMatchedPools: IPoolNode[];
 }
 
-export type queryFunction = (address: string, amt: string, skipT0: number, skipT1: number, callT0: boolean, callT1: boolean) => Promise<requestResponse>;
+export type queryFunction = (address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) => Promise<requestResponse[]>;
 export type supportedChains = "1" | "4" | "56" | "137" | "246" | "1285";

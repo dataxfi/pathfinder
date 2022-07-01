@@ -5,35 +5,32 @@ import { requestResponse } from "../@types";
  * @param response
  * @returns IPoolNode[]
  */
-export function formatter(response: any) {
+export function formatter(response: any, address: string[]) {
   if (response.data?.errors) return;
   try {
     let {
-      data: {
-        data: { t0IsMatch, t1IsMatch },
-      },
+      data: { data },
     } = response;
 
-    const t0MatchLength = t0IsMatch?.length;
-    const t1MatchLength = t1IsMatch?.length;
-    if (!t0IsMatch) t0IsMatch = [];
-    if (!t1IsMatch) t1IsMatch = [];
-    const allData = [...t0IsMatch, ...t1IsMatch];
+    console.log(response);
 
-    const edges = new Set(allData.map((poolData) => poolData.id));
+    const requestResponse: requestResponse[] = [];
 
-    const requestResponse: requestResponse = {
-      t0MatchLength,
-      t1MatchLength,
-      allMatchedPools: allData.map((pool) => ({
-        poolAddress: pool.id,
-        t1Address: pool.token0.id,
-        t2Address: pool.token1.id,
-        t1Liquidity: pool.totalValueLockedToken0,
-        t2Liquidity: pool.totalValueLockedToken1,
-        edges,
-      })),
-    };
+    address.forEach((address) => {
+      let t0Match = data[`t0IsMatch${address}`];
+      let t1Match = data[`t1IsMatch${address}`];
+      if (!t0Match) t0Match = [];
+      if (!t1Match) t1Match = [];
+      const t0MatchLength = t0Match.length;
+      const t1MatchLength = t1Match.length;
+      const allMatchedPools = [...t0Match, ...t1Match];
+
+      requestResponse.push({
+        t0MatchLength,
+        t1MatchLength,
+        allMatchedPools
+      });
+    });
 
     return requestResponse;
   } catch (error) {

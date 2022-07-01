@@ -1,12 +1,12 @@
 import Web3 from "web3";
-import { INextTokensToSearch, IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "../@types";
-import { bscPools, energywebPools, mainnetPools, maticPools, moonriverPools, rinkebyPools } from "../util";
+import { IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "../@types";
+import { mainnetPools, maticPools } from "../util";
+// bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
 export default class Pathfinder {
   private fetchFunction: queryFunction;
   public nodes: ITokenGraph;
   public tokensChecked: Set<string>;
-  private pendingQueries: Set<string>;
   private userTokenIn: string;
   private userTokenOut: string;
   private chainId;
@@ -14,11 +14,11 @@ export default class Pathfinder {
   private depth: number = 0;
   private pathFound: boolean = false;
   private totalAPIRequest: number = 0;
+  private initialQueryParams = { skipT0: [0], skipT1: [0], callT0: [true], callT1: [true] };
 
   constructor(chainId: supportedChains) {
     this.nodes = {};
     this.tokensChecked = new Set();
-    this.pendingQueries = new Set();
     this.userTokenIn = "";
     this.userTokenOut = "";
     this.chainId = chainId;
@@ -26,19 +26,19 @@ export default class Pathfinder {
 
     switch (Number(this.chainId)) {
       case 4:
-        this.fetchFunction = rinkebyPools;
+        // this.fetchFunction = rinkebyPools;
         break;
       case 137:
         this.fetchFunction = maticPools;
         break;
       case 56:
-        this.fetchFunction = bscPools;
+        // this.fetchFunction = bscPools;
         break;
       case 1285:
-        this.fetchFunction = moonriverPools;
+        // this.fetchFunction = moonriverPools;
         break;
       case 246:
-        this.fetchFunction = energywebPools;
+        // this.fetchFunction = energywebPools;
         break;
       default:
         this.fetchFunction = mainnetPools;
@@ -53,7 +53,7 @@ export default class Pathfinder {
    */
 
   private addPoolNode(poolNode: IPoolNode, tokenNode: IPoolGraph) {
-    tokenNode[poolNode.poolAddress] = poolNode;
+    tokenNode[poolNode.id] = poolNode;
   }
 
   /**
@@ -76,54 +76,43 @@ export default class Pathfinder {
     poolsFromToken,
     tokenAddress,
     destinationAddress,
-    parentTokenAddress,
-    IN,
-    amt,
+    parentTokenAddresses,
+    parentIndex,
   }: {
     poolsFromToken: IPoolNode[];
     tokenAddress: string;
     destinationAddress: string;
-    parentTokenAddress: string;
-    IN: boolean;
-    amt?: string;
-  }): Promise<INextTokensToSearch | null> {
-    let nextTokensToSearch = {};
+    parentTokenAddresses: string[] | null;
+    parentIndex: number;
+  }): Promise<string[][] | null> {
+    let nextTokensToSearch: string[] = [];
+    let nextParentTokenAddresses: string[] = []
     // //console.log("Searching pools", nextTokensToSearch, poolsFromToken);
 
     return new Promise(async (resolve, reject) => {
       try {
-        //iterate pools response adding nodes and edges
+        //iterate pools response adding nodes
         for (let i = 0; i < poolsFromToken.length; i++) {
           const poolNode = poolsFromToken[i];
+          const t1Address = poolNode.token0.id;
+          const t2Address = poolNode.token1.id;
 
-          let t1IsIn = poolNode.t1Address === tokenAddress;
           if (this.nodes[tokenAddress]) {
             this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
           } else {
-            this.addTokenNode(tokenAddress, parentTokenAddress);
+            const parent = parentTokenAddresses ? parentTokenAddresses[parentIndex] : null;
+            this.addTokenNode(tokenAddress, parent);
             this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
           }
 
-          const nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
-          //if exact token is token out, calculate what amount of the next token would be needed from the next pool
-          let nextAmt;
-          if (!IN) nextAmt = "1"; //await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
-          IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt[0] });
-
-          // //if exact token is token in, check if there is enough liquidity to support this swap
-          // if (IN) {
-          //   const amountOut = await this.trade.getAmountsOut(amt, [parentTokenAddress, nextTokenAddress]);
-          //   const liquidityNeeded = t1IsIn ? poolNode.t2Liquidity : poolNode.t1Liquidity;
-          //   if (amountOut[0] > liquidityNeeded) {
-          //     resolve(null);
-          //     return;
-          //   }
-          // }
+          const nextTokenAddress = t1Address === tokenAddress ? t2Address : t1Address;
+          nextTokensToSearch.push(nextTokenAddress);
+          nextParentTokenAddresses.push(tokenAddress);
 
           // This will resolve if the destination is found, regardless of whether there might be another
           // pool with less fees or more liquidity. The path will be the same even if there is another pool at the current
           // search depth, so fees and liquidity are currently being ignored.
-          if (poolNode.t1Address.toLowerCase() === this.userTokenOut.toLowerCase() || poolNode.t2Address.toLowerCase() === this.userTokenOut.toLowerCase()) {
+          if (t1Address.toLowerCase() === this.userTokenOut.toLowerCase() || t2Address.toLowerCase() === this.userTokenOut.toLowerCase()) {
             //console.log("Match found, resolving null.");
             this.addTokenNode(destinationAddress, tokenAddress);
             this.pathFound = true;
@@ -132,7 +121,7 @@ export default class Pathfinder {
           }
         }
 
-        resolve(nextTokensToSearch);
+        resolve([nextTokensToSearch, nextParentTokenAddresses]);
       } catch (error) {
         reject(error);
       }
@@ -145,148 +134,145 @@ export default class Pathfinder {
    * @param destinationAddress The token to be attained (token out)
    * @param amt The amount of destination token desired
    * @param IN Wether the exact token is the token in
-   * @param parentTokenAddress the token that was traded prior to the current token being searched (for recursion)
+   * @param parentTokenAddresses the token that was traded prior to the current token being searched (for recursion)
    * @param queryParams pagination for pool data requests (for recursion)
    * @param poolsFromToken all pool data from token (for recursion)
    * @param nextTokensToSearch all tokens to search next (for recursion)
    * @returns next tokens to search
    */
   private async getPoolData({
-    tokenAddress,
+    tokenAddresses,
     destinationAddress,
-    amt,
-    IN,
-    parentTokenAddress,
-    queryParams = { skipT0: 0, skipT1: 0, callT0: true, callT1: true },
+    parentTokenAddresses,
+    queryParams = this.initialQueryParams,
     poolsFromToken = [],
-    nextTokensToSearch = {},
     skipRecurse = false,
   }: {
-    tokenAddress: string;
+    tokenAddresses: string[];
     destinationAddress: string;
-    IN: boolean;
-    amt?: string;
-    parentTokenAddress?: string;
-    skip?: number;
+    parentTokenAddresses?: string[] | null;
     poolsFromToken?: IPoolNode[];
-    nextTokensToSearch?: INextTokensToSearch;
     queryParams?: queryParams;
     skipRecurse?: boolean;
-  }): Promise<INextTokensToSearch> {
+  }): Promise<string[]> {
     if (this.pathFound) {
       //console.log("Path already found, returning.");
       return null;
     }
 
+    let thisNextTokensToSearch = null;
+    let thisNextParentTokenAddresses = null;
+
+    let { skipT0, skipT1, callT0, callT1 } = queryParams;
+    const allTokensResponse = await this.fetchFunction(tokenAddresses, skipT0, skipT1, callT0, callT1);
+
+    console.log(allTokensResponse);
+    console.log(allTokensResponse[0].allMatchedPools);
     try {
-      tokenAddress = tokenAddress.toLowerCase();
-      destinationAddress = destinationAddress.toLowerCase();
-      let { skipT0, skipT1, callT0, callT1 } = queryParams;
+      allTokensResponse.forEach(async (response, index) => {
+        // skip tokens already searched
+        const tokenAddress = tokenAddresses[index];
+        if (this.tokensChecked.has(tokenAddress)) return;
 
-      // skip tokens already searched
-      if (this.tokensChecked.has(tokenAddress)) return;
+        let t0MatchLength: number = 0,
+          t1MatchLength: number = 0,
+          allMatchedPools: IPoolNode[] = [];
 
-      // add token address to pending queries and call fetch function with address
-      this.pendingQueries.add(tokenAddress);
-      this.totalAPIRequest++;
-      const response = await this.fetchFunction(tokenAddress, amt, skipT0, skipT1, callT0, callT1);
-      // console.log("Response for " + tokenAddress, response);
+        t0MatchLength = response.t0MatchLength;
+        t1MatchLength = response.t1MatchLength;
+        allMatchedPools = response.allMatchedPools;
+        if (allMatchedPools.length === 0) return;
 
-      let t0MatchLength: number = 0,
-        t1MatchLength: number = 0,
-        allMatchedPools: IPoolNode[] = [];
+        poolsFromToken.push(...allMatchedPools);
 
-      try {
-        if (response) {
-          t0MatchLength = response.t0MatchLength;
-          t1MatchLength = response.t1MatchLength;
-          allMatchedPools = response.allMatchedPools;
-        }
-      } catch (error) {
-        console.error("Could not destructure something.");
-      }
-      if (allMatchedPools.length === 0) return;
-      poolsFromToken.push(...allMatchedPools);
-
-      //search all matched pools looking for user token out
-      nextTokensToSearch = await this.searchPoolData({
-        poolsFromToken,
-        tokenAddress,
-        destinationAddress,
-        IN,
-        parentTokenAddress,
-        amt,
-      });
-
-      //console.log("Response from search data: ", nextTokensToSearch);
-      //three things need to happen at this point if the destination address was not found
-
-      //1. if there are more pools for the token then more data needs to be fetched and searched.
-      if (nextTokensToSearch && (t0MatchLength === 1000 || t1MatchLength === 1000)) {
-        if (t0MatchLength === 1000) {
-          skipT0 += 1000;
-          callT0 = true;
-        } else {
-          callT0 = false;
-        }
-
-        if (t1MatchLength === 1000) {
-          skipT1 += 1000;
-          callT1 = true;
-        } else {
-          callT1 = false;
-        }
-
-        const newQueryParams: queryParams = {
-          skipT0,
-          skipT1,
-          callT0,
-          callT1,
-        };
-
-        //console.log("Getting more pool data.");
-        await this.getPoolData({
+        //search all matched pools for user token out
+        const [nextTokensToSearch, nextParentTokenAddresses] = await this.searchPoolData({
+          poolsFromToken,
           tokenAddress,
           destinationAddress,
-          parentTokenAddress,
-          amt,
-          IN,
-          poolsFromToken,
-          nextTokensToSearch,
-          queryParams: newQueryParams,
-        });
-      }
-
-      // if the previous condition didnt pass, then all pools have been searched for this token
-      this.pendingQueries.delete(tokenAddress);
-      this.tokensChecked.add(tokenAddress);
-
-      //2. there are no more pools for the current token, so the pools at the next depth need to be searched
-      // iterate through next tokens to search, search every token this token has pools with before going deeper (most likely has pool with native)
-      if (!skipRecurse && nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
-        const promises = [];
-        for (let [token, value] of Object.entries(nextTokensToSearch)) {
-          // push a promise for each request to getPoolData to promises array
-          promises.push(this.getPoolData({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN, skipRecurse: true }));
-        }
-
-        // check if token was found or aggregate next pools to search
-        const allSettled = await Promise.allSettled(promises);
-        const tokenFound = allSettled.some((batch) => {
-          if (batch.status === "fulfilled") {
-            if (batch.value === null) {
-              return true;
-            } else {
-              nextTokensToSearch = { ...nextTokensToSearch, ...batch.value };
-            }
-          }
+          parentTokenAddresses,
+          parentIndex: index,
         });
 
-        // if pool is found there are no next tokens to search
-        if (tokenFound) nextTokensToSearch = null;
+        console.log(nextTokensToSearch, nextParentTokenAddresses)
+        thisNextParentTokenAddresses = nextParentTokenAddresses
+        thisNextTokensToSearch = nextTokensToSearch
+        //console.log("Response from search data: ", nextTokensToSearch);
+        //three things need to happen at this point if the destination address was not found
+
+        // //1. if there are more pools for the token then more data needs to be fetched and searched.
+        // if (nextTokensToSearch && (t0MatchLength === 1000 || t1MatchLength === 1000)) {
+        //   if (t0MatchLength === 1000) {
+        //     skipT0[index] += 1000;
+        //     callT0[index] = true;
+        //   } else {
+        //     callT0[index] = false;
+        //   }
+
+        //   if (t1MatchLength === 1000) {
+        //     skipT1[index] += 1000;
+        //     callT1[index] = true;
+        //   } else {
+        //     callT1[index] = false;
+        //   }
+
+        //   const newQueryParams: queryParams = {
+        //     skipT0,
+        //     skipT1,
+        //     callT0,
+        //     callT1,
+        //   };
+
+        //   //console.log("Getting more pool data.");
+        //   await this.getPoolData({
+        //     tokenAddress,
+        //     destinationAddress,
+        //     parentTokenAddress,
+        //     amt,
+        //     IN,
+        //     poolsFromToken,
+        //     nextTokensToSearch,
+        //     queryParams: newQueryParams,
+        //   });
+        // }
+
+        // if the previous condition didnt pass, then all pools have been searched for this token
+        this.tokensChecked.add(tokenAddress);
+
+        //2. there are no more pools for the current token, so the pools at the next depth need to be searched
+        // iterate through next tokens to search, search every token this token has pools with before going deeper (most likely has pool with native)
+        // if (!skipRecurse && nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
+        //   const promises = [];
+        //   for (let [token, value] of Object.entries(nextTokensToSearch)) {
+        //     // push a promise for each request to getPoolData to promises array
+        //     promises.push(this.getPoolData({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN, skipRecurse: true }));
+        //   }
+
+        //   // check if token was found or aggregate next pools to search
+        //   const allSettled = await Promise.allSettled(promises);
+        //   const tokenFound = allSettled.some((batch) => {
+        //     if (batch.status === "fulfilled") {
+        //       if (batch.value === null) {
+        //         return true;
+        //       } else {
+        //         nextTokensToSearch = { ...nextTokensToSearch, ...batch.value };
+        //       }
+        //     }
+        //   });
+
+        //   // if pool is found there are no next tokens to search
+        //   if (tokenFound) nextTokensToSearch = null;
+        // }
+      });
+
+      // // console.log("Response for " + tokenAddress, response);
+      console.log(thisNextTokensToSearch, thisNextParentTokenAddresses)
+
+      if (thisNextTokensToSearch) {
+        await this.getPoolData({ tokenAddresses: thisNextTokensToSearch, destinationAddress, parentTokenAddresses: thisNextParentTokenAddresses, poolsFromToken, queryParams });
       }
 
-      return nextTokensToSearch;
+      return thisNextTokensToSearch;
     } catch (error) {
       console.error("An error occured:", error);
     }
@@ -297,35 +283,23 @@ export default class Pathfinder {
    * @param param0
    * @returns An array of tokens to be traded in order to route to the destination token in the shortest path possible.
    */
-  private async getTokenPaths({
-    tokenAddress,
-    destinationAddress,
-    IN,
-    parentTokenAddress,
-    amt,
-  }: {
-    tokenAddress: string;
-    destinationAddress: string;
-    IN: boolean;
-    parentTokenAddress?: string;
-    amt?: string;
-  }): Promise<string> {
+  private async getTokenPaths({ tokenAddress, destinationAddress }: { tokenAddress: string; destinationAddress: string }): Promise<string> {
     return new Promise(async (resolve, reject) => {
       try {
         //console.log("Calling initial request for pool data :", { tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
-        const nextTokensToSearch = await this.getPoolData({ tokenAddress, destinationAddress, parentTokenAddress, amt, IN });
-        //console.log("Initial call to pool data has resolved, nextTokensToSearch is truthy:", !!nextTokensToSearch);
+        const nextTokensToSearch = await this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress });
+        console.log("Initial call to pool data has resolved, nextTokensToSearch is truthy:", nextTokensToSearch);
 
-        const nextPromises = [];
-        if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
-          //console.log("No token found for this depth, dispatching next depth with:", Object.entries(nextTokensToSearch).length);
-          for (let [token, value] of Object.entries(nextTokensToSearch)) {
-            if (!this.pathFound) nextPromises.push(this.getTokenPaths({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
-          }
-        }
+        // const nextPromises = [];
+        // if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
+        //console.log("No token found for this depth, dispatching next depth with:", Object.entries(nextTokensToSearch).length);
+        // for (let [token, value] of Object.entries(nextTokensToSearch)) {
+        // if (!this.pathFound && nextTokensToSearch) nextPromises.push(this.getTokenPaths({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
+        // }
+        // }
 
         //console.log("Total promises made:", nextPromises.length);
-        await Promise.allSettled(nextPromises);
+        // await Promise.allSettled(nextPromises);
         //console.log("All promises settled");
 
         if (!nextTokensToSearch && this.nodes[destinationAddress]) {
@@ -348,20 +322,7 @@ export default class Pathfinder {
    * @param param0
    * @returns
    */
-  public async getTokenPath({
-    tokenAddress,
-    destinationAddress,
-    amt,
-    abortSignal,
-    IN,
-  }: {
-    tokenAddress: string;
-    destinationAddress: string;
-    IN?: boolean;
-    parentTokenAddress?: string;
-    amt?: string;
-    abortSignal?: AbortSignal;
-  }): Promise<string[]> {
+  public async getTokenPath({ tokenAddress, destinationAddress, abortSignal }: { tokenAddress: string; destinationAddress: string; abortSignal?: AbortSignal }): Promise<string[]> {
     return new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
         return reject(new Error("Aborted"));
@@ -385,7 +346,7 @@ export default class Pathfinder {
         }
 
         //console.log("Calling get token paths");
-        await this.getTokenPaths({ tokenAddress, destinationAddress, amt, IN });
+        await this.getTokenPaths({ tokenAddress, destinationAddress });
         //console.log("Calling resolve all paths");
         const path = await this.resolveAllPaths();
         console.log("Total API requests: ", this.totalAPIRequest);

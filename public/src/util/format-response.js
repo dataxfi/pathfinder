@@ -15,33 +15,31 @@ exports.formatter = void 0;
  * @param response
  * @returns IPoolNode[]
  */
-function formatter(response) {
+function formatter(response, address) {
     var _a;
     if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.errors)
         return;
     try {
-        var _b = response.data.data, t0IsMatch = _b.t0IsMatch, t1IsMatch = _b.t1IsMatch;
-        var t0MatchLength = t0IsMatch === null || t0IsMatch === void 0 ? void 0 : t0IsMatch.length;
-        var t1MatchLength = t1IsMatch === null || t1IsMatch === void 0 ? void 0 : t1IsMatch.length;
-        if (!t0IsMatch)
-            t0IsMatch = [];
-        if (!t1IsMatch)
-            t1IsMatch = [];
-        var allData = __spreadArray(__spreadArray([], t0IsMatch, true), t1IsMatch, true);
-        var edges_1 = new Set(allData.map(function (poolData) { return poolData.id; }));
-        var requestResponse = {
-            t0MatchLength: t0MatchLength,
-            t1MatchLength: t1MatchLength,
-            allMatchedPools: allData.map(function (pool) { return ({
-                poolAddress: pool.id,
-                t1Address: pool.token0.id,
-                t2Address: pool.token1.id,
-                t1Liquidity: pool.totalValueLockedToken0,
-                t2Liquidity: pool.totalValueLockedToken1,
-                edges: edges_1,
-            }); }),
-        };
-        return requestResponse;
+        var data_1 = response.data.data;
+        console.log(response);
+        var requestResponse_1 = [];
+        address.forEach(function (address) {
+            var t0Match = data_1["t0IsMatch".concat(address)];
+            var t1Match = data_1["t1IsMatch".concat(address)];
+            if (!t0Match)
+                t0Match = [];
+            if (!t1Match)
+                t1Match = [];
+            var t0MatchLength = t0Match.length;
+            var t1MatchLength = t1Match.length;
+            var allMatchedPools = __spreadArray(__spreadArray([], t0Match, true), t1Match, true);
+            requestResponse_1.push({
+                t0MatchLength: t0MatchLength,
+                t1MatchLength: t1MatchLength,
+                allMatchedPools: allMatchedPools
+            });
+        });
+        return requestResponse_1;
     }
     catch (error) {
         console.error(error);

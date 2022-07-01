@@ -43,27 +43,21 @@ var failed = function (param) {
     throw new Error("Failed to specify ".concat(param, " in request body."));
 };
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, amt, IN, pathfinder, path;
+    var _a, chainId, tokenIn, tokenOut, pathfinder, path;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut, amt = _a.amt, IN = _a.IN;
+                _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
                 if (!chainId)
                     failed("chainId");
                 if (!tokenIn)
                     failed("tokenIn");
                 if (!tokenOut)
                     failed("tokenOut");
-                if (IN === undefined && amt)
-                    failed("IN along with amt");
-                if (!amt && IN !== undefined)
-                    failed("amt along with IN");
                 pathfinder = new pathfinder_1.Pathfinder(chainId);
                 return [4 /*yield*/, pathfinder.getTokenPath({
                         tokenAddress: tokenIn,
                         destinationAddress: tokenOut,
-                        IN: IN,
-                        amt: amt,
                     })];
             case 1:
                 path = _b.sent();

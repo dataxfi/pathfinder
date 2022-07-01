@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.rinkebyPools = exports.moonriverPools = exports.bscPools = exports.mainnetPools = exports.maticPools = exports.energywebPools = void 0;
+exports.mainnetPools = exports.maticPools = void 0;
 var subgraph_requests_1 = require("./subgraph-requests");
 var minAmt = '100';
 /**
@@ -44,35 +44,23 @@ var minAmt = '100';
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function energywebPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV3Req)("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, amt, skipT0, skipT1, callT0, callT1)];
-                case 2: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-}
-exports.energywebPools = energywebPools;
+// export async function energywebPools(address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   await new Promise((res) => (setTimeout(()=>{res(""), 25})))
+//   return await uniswapV3Req("https://ewc-subgraph-production.carbonswap.exchange/subgraphs/name/carbonswap/uniswapv2", address, skipT0, skipT1, callT0, callT1);
+// }
 /**
  * Returns set of all pools which contain provided address from matic chain (137)
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function maticPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
+function maticPools(address, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
                 case 1:
                     _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://polygon.furadao.org/subgraphs/name/quickswap", address, amt, skipT0, skipT1, callT0, callT1)];
+                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://polygon.furadao.org/subgraphs/name/quickswap", address, skipT0, skipT1, callT0, callT1)];
                 case 2: return [2 /*return*/, _a.sent()];
             }
         });
@@ -84,15 +72,14 @@ exports.maticPools = maticPools;
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function mainnetPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
+function mainnetPools(address, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
                 case 1:
                     _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", address, amt, skipT0, skipT1, callT0, callT1)];
+                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", address, skipT0, skipT1, callT0, callT1)];
                 case 2: return [2 /*return*/, _a.sent()];
             }
         });
@@ -104,59 +91,26 @@ exports.mainnetPools = mainnetPools;
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function bscPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV3Req)("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, amt, skipT0, skipT1, callT0, callT1)];
-                case 2: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-}
-exports.bscPools = bscPools;
+// export async function bscPools(address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   await new Promise((res) => (setTimeout(()=>{res(""), 25})))
+//   return await uniswapV3Req("https://bsc.streamingfast.io/subgraphs/name/pancakeswap/exchange-v2", address, skipT0, skipT1, callT0, callT1);
+// }
 /**
  * Returns set of all pools which contain provided address from moonriver chain (1285)
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function moonriverPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV3Req)("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, amt, skipT0, skipT1, callT0, callT1)];
-                case 2: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-}
-exports.moonriverPools = moonriverPools;
+// export async function moonriverPools(address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   await new Promise((res) => (setTimeout(()=>{res(""), 25})))
+//   return await uniswapV3Req("https://api.thegraph.com/subgraphs/name/solarbeamio/amm-v2", address, skipT0, skipT1, callT0, callT1);
+// }
 /**
  * Returns set of all pools which contain provided address
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function rinkebyPools(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (amt === void 0) { amt = minAmt; }
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV3Req)("https://api.thegraph.com/subgraphs/name/mtahon/uniswap-v3-rinkeby", address, amt, skipT0, skipT1, callT0, callT1)];
-                case 2: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-}
-exports.rinkebyPools = rinkebyPools;
+// export async function rinkebyPools(address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   await new Promise((res) => (setTimeout(()=>{res(""), 25})))
+//   return await uniswapV3Req("https://api.thegraph.com/subgraphs/name/mtahon/uniswap-v3-rinkeby", address, skipT0, skipT1, callT0, callT1);
+// }
 //# sourceMappingURL=subgraph-provider.js.map

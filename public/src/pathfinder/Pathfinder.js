@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -48,35 +37,39 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var util_1 = require("../util");
+// bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
 var Pathfinder = /** @class */ (function () {
     function Pathfinder(chainId) {
         this.allPaths = [];
         this.depth = 0;
         this.pathFound = false;
+<<<<<<< HEAD
         this.totalAPIRequest = 0;
+=======
+        this.initialQueryParams = { skipT0: [0], skipT1: [0], callT0: [true], callT1: [true] };
+>>>>>>> newSearch
         this.nodes = {};
         this.tokensChecked = new Set();
-        this.pendingQueries = new Set();
         this.userTokenIn = "";
         this.userTokenOut = "";
         this.chainId = chainId;
         // this.trade = new Trade(web3, chainId);
         switch (Number(this.chainId)) {
             case 4:
-                this.fetchFunction = util_1.rinkebyPools;
+                // this.fetchFunction = rinkebyPools;
                 break;
             case 137:
                 this.fetchFunction = util_1.maticPools;
                 break;
             case 56:
-                this.fetchFunction = util_1.bscPools;
+                // this.fetchFunction = bscPools;
                 break;
             case 1285:
-                this.fetchFunction = util_1.moonriverPools;
+                // this.fetchFunction = moonriverPools;
                 break;
             case 246:
-                this.fetchFunction = util_1.energywebPools;
+                // this.fetchFunction = energywebPools;
                 break;
             default:
                 this.fetchFunction = util_1.mainnetPools;
@@ -89,7 +82,7 @@ var Pathfinder = /** @class */ (function () {
      * @param tokenNode The tokenNode to add poolNode to its 'pool' attribute.
      */
     Pathfinder.prototype.addPoolNode = function (poolNode, tokenNode) {
-        tokenNode[poolNode.poolAddress] = poolNode;
+        tokenNode[poolNode.id] = poolNode;
     };
     /**
      * Adds a token node to the main graph.
@@ -107,46 +100,38 @@ var Pathfinder = /** @class */ (function () {
      * @returns The next tokens to be searched OR null if a path can be made.
      */
     Pathfinder.prototype.searchPoolData = function (_a) {
-        var poolsFromToken = _a.poolsFromToken, tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, parentTokenAddress = _a.parentTokenAddress, IN = _a.IN, amt = _a.amt;
+        var poolsFromToken = _a.poolsFromToken, tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, parentTokenAddresses = _a.parentTokenAddresses, parentIndex = _a.parentIndex;
         return __awaiter(this, void 0, void 0, function () {
-            var nextTokensToSearch;
+            var nextTokensToSearch, nextParentTokenAddresses;
             var _this = this;
             return __generator(this, function (_b) {
-                nextTokensToSearch = {};
+                nextTokensToSearch = [];
+                nextParentTokenAddresses = [];
                 // //console.log("Searching pools", nextTokensToSearch, poolsFromToken);
                 return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                        var i, poolNode, t1IsIn, nextTokenAddress, nextAmt;
+                        var i, poolNode, t1Address, t2Address, parent_1, nextTokenAddress;
                         return __generator(this, function (_a) {
                             try {
-                                //iterate pools response adding nodes and edges
+                                //iterate pools response adding nodes
                                 for (i = 0; i < poolsFromToken.length; i++) {
                                     poolNode = poolsFromToken[i];
-                                    t1IsIn = poolNode.t1Address === tokenAddress;
+                                    t1Address = poolNode.token0.id;
+                                    t2Address = poolNode.token1.id;
                                     if (this.nodes[tokenAddress]) {
                                         this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
                                     }
                                     else {
-                                        this.addTokenNode(tokenAddress, parentTokenAddress);
+                                        parent_1 = parentTokenAddresses ? parentTokenAddresses[parentIndex] : null;
+                                        this.addTokenNode(tokenAddress, parent_1);
                                         this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
                                     }
-                                    nextTokenAddress = poolNode.t1Address === tokenAddress ? poolNode.t2Address : poolNode.t1Address;
-                                    nextAmt = void 0;
-                                    if (!IN)
-                                        nextAmt = "1"; //await this.trade.getAmountsIn(amt, [parentTokenAddress, nextTokenAddress]);
-                                    IN ? (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress }) : (nextTokensToSearch[nextTokenAddress] = { parent: tokenAddress, amt: nextAmt[0] });
-                                    // //if exact token is token in, check if there is enough liquidity to support this swap
-                                    // if (IN) {
-                                    //   const amountOut = await this.trade.getAmountsOut(amt, [parentTokenAddress, nextTokenAddress]);
-                                    //   const liquidityNeeded = t1IsIn ? poolNode.t2Liquidity : poolNode.t1Liquidity;
-                                    //   if (amountOut[0] > liquidityNeeded) {
-                                    //     resolve(null);
-                                    //     return;
-                                    //   }
-                                    // }
+                                    nextTokenAddress = t1Address === tokenAddress ? t2Address : t1Address;
+                                    nextTokensToSearch.push(nextTokenAddress);
+                                    nextParentTokenAddresses.push(tokenAddress);
                                     // This will resolve if the destination is found, regardless of whether there might be another
                                     // pool with less fees or more liquidity. The path will be the same even if there is another pool at the current
                                     // search depth, so fees and liquidity are currently being ignored.
-                                    if (poolNode.t1Address.toLowerCase() === this.userTokenOut.toLowerCase() || poolNode.t2Address.toLowerCase() === this.userTokenOut.toLowerCase()) {
+                                    if (t1Address.toLowerCase() === this.userTokenOut.toLowerCase() || t2Address.toLowerCase() === this.userTokenOut.toLowerCase()) {
                                         //console.log("Match found, resolving null.");
                                         this.addTokenNode(destinationAddress, tokenAddress);
                                         this.pathFound = true;
@@ -154,7 +139,7 @@ var Pathfinder = /** @class */ (function () {
                                         return [2 /*return*/];
                                     }
                                 }
-                                resolve(nextTokensToSearch);
+                                resolve([nextTokensToSearch, nextParentTokenAddresses]);
                             }
                             catch (error) {
                                 reject(error);
@@ -171,29 +156,28 @@ var Pathfinder = /** @class */ (function () {
      * @param destinationAddress The token to be attained (token out)
      * @param amt The amount of destination token desired
      * @param IN Wether the exact token is the token in
-     * @param parentTokenAddress the token that was traded prior to the current token being searched (for recursion)
+     * @param parentTokenAddresses the token that was traded prior to the current token being searched (for recursion)
      * @param queryParams pagination for pool data requests (for recursion)
      * @param poolsFromToken all pool data from token (for recursion)
      * @param nextTokensToSearch all tokens to search next (for recursion)
      * @returns next tokens to search
      */
     Pathfinder.prototype.getPoolData = function (_a) {
-        var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, amt = _a.amt, IN = _a.IN, parentTokenAddress = _a.parentTokenAddress, _b = _a.queryParams, queryParams = _b === void 0 ? { skipT0: 0, skipT1: 0, callT0: true, callT1: true } : _b, _c = _a.poolsFromToken, poolsFromToken = _c === void 0 ? [] : _c, _d = _a.nextTokensToSearch, nextTokensToSearch = _d === void 0 ? {} : _d, _e = _a.skipRecurse, skipRecurse = _e === void 0 ? false : _e;
+        var tokenAddresses = _a.tokenAddresses, destinationAddress = _a.destinationAddress, parentTokenAddresses = _a.parentTokenAddresses, _b = _a.queryParams, queryParams = _b === void 0 ? this.initialQueryParams : _b, _c = _a.poolsFromToken, poolsFromToken = _c === void 0 ? [] : _c, _d = _a.skipRecurse, skipRecurse = _d === void 0 ? false : _d;
         return __awaiter(this, void 0, void 0, function () {
-            var skipT0, skipT1, callT0, callT1, response, t0MatchLength, t1MatchLength, allMatchedPools, newQueryParams, promises, _i, _f, _g, token, value, allSettled, tokenFound, error_1;
-            return __generator(this, function (_h) {
-                switch (_h.label) {
+            var thisNextTokensToSearch, thisNextParentTokenAddresses, skipT0, skipT1, callT0, callT1, allTokensResponse, error_1;
+            var _this = this;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         if (this.pathFound) {
                             //console.log("Path already found, returning.");
                             return [2 /*return*/, null];
                         }
-                        _h.label = 1;
-                    case 1:
-                        _h.trys.push([1, 8, , 9]);
-                        tokenAddress = tokenAddress.toLowerCase();
-                        destinationAddress = destinationAddress.toLowerCase();
+                        thisNextTokensToSearch = null;
+                        thisNextParentTokenAddresses = null;
                         skipT0 = queryParams.skipT0, skipT1 = queryParams.skipT1, callT0 = queryParams.callT0, callT1 = queryParams.callT1;
+<<<<<<< HEAD
                         // skip tokens already searched
                         if (this.tokensChecked.has(tokenAddress))
                             return [2 /*return*/];
@@ -226,79 +210,96 @@ var Pathfinder = /** @class */ (function () {
                                 parentTokenAddress: parentTokenAddress,
                                 amt: amt,
                             })];
+=======
+                        return [4 /*yield*/, this.fetchFunction(tokenAddresses, skipT0, skipT1, callT0, callT1)];
+                    case 1:
+                        allTokensResponse = _e.sent();
+                        console.log(allTokensResponse);
+                        console.log(allTokensResponse[0].allMatchedPools);
+                        _e.label = 2;
+                    case 2:
+                        _e.trys.push([2, 5, , 6]);
+                        allTokensResponse.forEach(function (response, index) { return __awaiter(_this, void 0, void 0, function () {
+                            var tokenAddress, t0MatchLength, t1MatchLength, allMatchedPools, _a, nextTokensToSearch, nextParentTokenAddresses;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        tokenAddress = tokenAddresses[index];
+                                        if (this.tokensChecked.has(tokenAddress))
+                                            return [2 /*return*/];
+                                        t0MatchLength = 0, t1MatchLength = 0, allMatchedPools = [];
+                                        t0MatchLength = response.t0MatchLength;
+                                        t1MatchLength = response.t1MatchLength;
+                                        allMatchedPools = response.allMatchedPools;
+                                        if (allMatchedPools.length === 0)
+                                            return [2 /*return*/];
+                                        poolsFromToken.push.apply(poolsFromToken, allMatchedPools);
+                                        return [4 /*yield*/, this.searchPoolData({
+                                                poolsFromToken: poolsFromToken,
+                                                tokenAddress: tokenAddress,
+                                                destinationAddress: destinationAddress,
+                                                parentTokenAddresses: parentTokenAddresses,
+                                                parentIndex: index,
+                                            })];
+                                    case 1:
+                                        _a = _b.sent(), nextTokensToSearch = _a[0], nextParentTokenAddresses = _a[1];
+                                        console.log(nextTokensToSearch, nextParentTokenAddresses);
+                                        thisNextParentTokenAddresses = nextParentTokenAddresses;
+                                        thisNextTokensToSearch = nextTokensToSearch;
+                                        //console.log("Response from search data: ", nextTokensToSearch);
+                                        //three things need to happen at this point if the destination address was not found
+                                        // //1. if there are more pools for the token then more data needs to be fetched and searched.
+                                        // if (nextTokensToSearch && (t0MatchLength === 1000 || t1MatchLength === 1000)) {
+                                        //   if (t0MatchLength === 1000) {
+                                        //     skipT0[index] += 1000;
+                                        //     callT0[index] = true;
+                                        //   } else {
+                                        //     callT0[index] = false;
+                                        //   }
+                                        //   if (t1MatchLength === 1000) {
+                                        //     skipT1[index] += 1000;
+                                        //     callT1[index] = true;
+                                        //   } else {
+                                        //     callT1[index] = false;
+                                        //   }
+                                        //   const newQueryParams: queryParams = {
+                                        //     skipT0,
+                                        //     skipT1,
+                                        //     callT0,
+                                        //     callT1,
+                                        //   };
+                                        //   //console.log("Getting more pool data.");
+                                        //   await this.getPoolData({
+                                        //     tokenAddress,
+                                        //     destinationAddress,
+                                        //     parentTokenAddress,
+                                        //     amt,
+                                        //     IN,
+                                        //     poolsFromToken,
+                                        //     nextTokensToSearch,
+                                        //     queryParams: newQueryParams,
+                                        //   });
+                                        // }
+                                        // if the previous condition didnt pass, then all pools have been searched for this token
+                                        this.tokensChecked.add(tokenAddress);
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        // // console.log("Response for " + tokenAddress, response);
+                        console.log(thisNextTokensToSearch, thisNextParentTokenAddresses);
+                        if (!thisNextTokensToSearch) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.getPoolData({ tokenAddresses: thisNextTokensToSearch, destinationAddress: destinationAddress, parentTokenAddresses: thisNextParentTokenAddresses, poolsFromToken: poolsFromToken, queryParams: queryParams })];
+>>>>>>> newSearch
                     case 3:
-                        //search all matched pools looking for user token out
-                        nextTokensToSearch = _h.sent();
-                        if (!(nextTokensToSearch && (t0MatchLength === 1000 || t1MatchLength === 1000))) return [3 /*break*/, 5];
-                        if (t0MatchLength === 1000) {
-                            skipT0 += 1000;
-                            callT0 = true;
-                        }
-                        else {
-                            callT0 = false;
-                        }
-                        if (t1MatchLength === 1000) {
-                            skipT1 += 1000;
-                            callT1 = true;
-                        }
-                        else {
-                            callT1 = false;
-                        }
-                        newQueryParams = {
-                            skipT0: skipT0,
-                            skipT1: skipT1,
-                            callT0: callT0,
-                            callT1: callT1,
-                        };
-                        //console.log("Getting more pool data.");
-                        return [4 /*yield*/, this.getPoolData({
-                                tokenAddress: tokenAddress,
-                                destinationAddress: destinationAddress,
-                                parentTokenAddress: parentTokenAddress,
-                                amt: amt,
-                                IN: IN,
-                                poolsFromToken: poolsFromToken,
-                                nextTokensToSearch: nextTokensToSearch,
-                                queryParams: newQueryParams,
-                            })];
-                    case 4:
-                        //console.log("Getting more pool data.");
-                        _h.sent();
-                        _h.label = 5;
+                        _e.sent();
+                        _e.label = 4;
+                    case 4: return [2 /*return*/, thisNextTokensToSearch];
                     case 5:
-                        // if the previous condition didnt pass, then all pools have been searched for this token
-                        this.pendingQueries.delete(tokenAddress);
-                        this.tokensChecked.add(tokenAddress);
-                        if (!(!skipRecurse && nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0)) return [3 /*break*/, 7];
-                        promises = [];
-                        for (_i = 0, _f = Object.entries(nextTokensToSearch); _i < _f.length; _i++) {
-                            _g = _f[_i], token = _g[0], value = _g[1];
-                            // push a promise for each request to getPoolData to promises array
-                            promises.push(this.getPoolData({ destinationAddress: destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN: IN, skipRecurse: true }));
-                        }
-                        return [4 /*yield*/, Promise.allSettled(promises)];
-                    case 6:
-                        allSettled = _h.sent();
-                        tokenFound = allSettled.some(function (batch) {
-                            if (batch.status === "fulfilled") {
-                                if (batch.value === null) {
-                                    return true;
-                                }
-                                else {
-                                    nextTokensToSearch = __assign(__assign({}, nextTokensToSearch), batch.value);
-                                }
-                            }
-                        });
-                        // if pool is found there are no next tokens to search
-                        if (tokenFound)
-                            nextTokensToSearch = null;
-                        _h.label = 7;
-                    case 7: return [2 /*return*/, nextTokensToSearch];
-                    case 8:
-                        error_1 = _h.sent();
+                        error_1 = _e.sent();
                         console.error("An error occured:", error_1);
-                        return [3 /*break*/, 9];
-                    case 9: return [2 /*return*/];
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
                 }
             });
         });
@@ -309,33 +310,29 @@ var Pathfinder = /** @class */ (function () {
      * @returns An array of tokens to be traded in order to route to the destination token in the shortest path possible.
      */
     Pathfinder.prototype.getTokenPaths = function (_a) {
-        var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, IN = _a.IN, parentTokenAddress = _a.parentTokenAddress, amt = _a.amt;
+        var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress;
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_b) {
                 return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                        var nextTokensToSearch, nextPromises, _i, _a, _b, token, value, path, error_2;
-                        return __generator(this, function (_c) {
-                            switch (_c.label) {
+                        var nextTokensToSearch, path, error_2;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
                                 case 0:
-                                    _c.trys.push([0, 3, , 4]);
-                                    return [4 /*yield*/, this.getPoolData({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, parentTokenAddress: parentTokenAddress, amt: amt, IN: IN })];
+                                    _a.trys.push([0, 2, , 3]);
+                                    return [4 /*yield*/, this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress: destinationAddress })];
                                 case 1:
-                                    nextTokensToSearch = _c.sent();
-                                    nextPromises = [];
-                                    if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
-                                        //console.log("No token found for this depth, dispatching next depth with:", Object.entries(nextTokensToSearch).length);
-                                        for (_i = 0, _a = Object.entries(nextTokensToSearch); _i < _a.length; _i++) {
-                                            _b = _a[_i], token = _b[0], value = _b[1];
-                                            if (!this.pathFound)
-                                                nextPromises.push(this.getTokenPaths({ destinationAddress: destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN: IN }));
-                                        }
-                                    }
+                                    nextTokensToSearch = _a.sent();
+                                    console.log("Initial call to pool data has resolved, nextTokensToSearch is truthy:", nextTokensToSearch);
+                                    // const nextPromises = [];
+                                    // if (nextTokensToSearch && Object.keys(nextTokensToSearch).length > 0) {
+                                    //console.log("No token found for this depth, dispatching next depth with:", Object.entries(nextTokensToSearch).length);
+                                    // for (let [token, value] of Object.entries(nextTokensToSearch)) {
+                                    // if (!this.pathFound && nextTokensToSearch) nextPromises.push(this.getTokenPaths({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN }));
+                                    // }
+                                    // }
                                     //console.log("Total promises made:", nextPromises.length);
-                                    return [4 /*yield*/, Promise.allSettled(nextPromises)];
-                                case 2:
-                                    //console.log("Total promises made:", nextPromises.length);
-                                    _c.sent();
+                                    // await Promise.allSettled(nextPromises);
                                     //console.log("All promises settled");
                                     if (!nextTokensToSearch && this.nodes[destinationAddress]) {
                                         path = this.constructPath({ destination: this.userTokenOut });
@@ -347,12 +344,12 @@ var Pathfinder = /** @class */ (function () {
                                     else {
                                         resolve("No path found");
                                     }
-                                    return [3 /*break*/, 4];
-                                case 3:
-                                    error_2 = _c.sent();
+                                    return [3 /*break*/, 3];
+                                case 2:
+                                    error_2 = _a.sent();
                                     console.error(error_2);
-                                    return [3 /*break*/, 4];
-                                case 4: return [2 /*return*/];
+                                    return [3 /*break*/, 3];
+                                case 3: return [2 /*return*/];
                             }
                         });
                     }); })];
@@ -365,7 +362,7 @@ var Pathfinder = /** @class */ (function () {
      * @returns
      */
     Pathfinder.prototype.getTokenPath = function (_a) {
-        var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, amt = _a.amt, abortSignal = _a.abortSignal, IN = _a.IN;
+        var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, abortSignal = _a.abortSignal;
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_b) {
@@ -396,7 +393,7 @@ var Pathfinder = /** @class */ (function () {
                                         return [2 /*return*/, resolve([tokenAddress])];
                                     }
                                     //console.log("Calling get token paths");
-                                    return [4 /*yield*/, this.getTokenPaths({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, amt: amt, IN: IN })];
+                                    return [4 /*yield*/, this.getTokenPaths({ tokenAddress: tokenAddress, destinationAddress: destinationAddress })];
                                 case 2:
                                     //console.log("Calling get token paths");
                                     _a.sent();
@@ -424,16 +421,16 @@ var Pathfinder = /** @class */ (function () {
     Pathfinder.prototype.constructPath = function (_a) {
         var path = _a.path, destination = _a.destination;
         try {
-            var parent_1;
+            var parent_2;
             if (path) {
-                parent_1 = this.nodes[path[0]].parent;
+                parent_2 = this.nodes[path[0]].parent;
             }
             else {
                 path = [destination];
-                parent_1 = this.nodes[destination].parent;
+                parent_2 = this.nodes[destination].parent;
             }
-            if (parent_1) {
-                path.unshift(parent_1);
+            if (parent_2) {
+                path.unshift(parent_2);
                 this.constructPath({ path: path });
             }
             return path;
