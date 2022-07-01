@@ -13,6 +13,7 @@ export default class Pathfinder {
   private allPaths: string[][] = [];
   private depth: number = 0;
   private pathFound: boolean = false;
+  private totalAPIRequest: number = 0;
 
   constructor(chainId: supportedChains) {
     this.nodes = {};
@@ -187,6 +188,7 @@ export default class Pathfinder {
 
       // add token address to pending queries and call fetch function with address
       this.pendingQueries.add(tokenAddress);
+      this.totalAPIRequest++;
       const response = await this.fetchFunction(tokenAddress, amt, skipT0, skipT1, callT0, callT1);
       // console.log("Response for " + tokenAddress, response);
 
@@ -194,9 +196,15 @@ export default class Pathfinder {
         t1MatchLength: number = 0,
         allMatchedPools: IPoolNode[] = [];
 
-      if (response.t0MatchLength) t0MatchLength = response.t0MatchLength;
-      if (response.t1MatchLength) t1MatchLength = response.t1MatchLength;
-      if (response.allMatchedPools) allMatchedPools = response.allMatchedPools;
+      try {
+        if (response) {
+          t0MatchLength = response.t0MatchLength;
+          t1MatchLength = response.t1MatchLength;
+          allMatchedPools = response.allMatchedPools;
+        }
+      } catch (error) {
+        console.error("Could not destructure something.");
+      }
       if (allMatchedPools.length === 0) return;
       poolsFromToken.push(...allMatchedPools);
 
@@ -261,7 +269,7 @@ export default class Pathfinder {
           // push a promise for each request to getPoolData to promises array
           promises.push(this.getPoolData({ destinationAddress, tokenAddress: token, parentTokenAddress: value.parent, amt: value.amt, IN, skipRecurse: true }));
         }
-        
+
         // check if token was found or aggregate next pools to search
         const allSettled = await Promise.allSettled(promises);
         const tokenFound = allSettled.some((batch) => {
@@ -364,6 +372,7 @@ export default class Pathfinder {
         this.pathFound = false;
         this.allPaths = [];
         this.tokensChecked = new Set();
+        // this.totalAPIRequest = 0;
 
         tokenAddress = tokenAddress.toLowerCase();
         destinationAddress = destinationAddress.toLowerCase();
@@ -379,6 +388,7 @@ export default class Pathfinder {
         await this.getTokenPaths({ tokenAddress, destinationAddress, amt, IN });
         //console.log("Calling resolve all paths");
         const path = await this.resolveAllPaths();
+        console.log("Total API requests: ", this.totalAPIRequest);
         return resolve(path);
       } catch (error) {
         console.error(error);
@@ -438,4 +448,3 @@ export default class Pathfinder {
 //   })
 //   .then((r) => console.log("response", r))
 //   .catch(console.error);
-

@@ -14,7 +14,7 @@ function uniswapV2Query(address, amt, skipT0, skipT1, callT0, callT1) {
     if (skipT1 === void 0) { skipT1 = 0; }
     if (callT0 === void 0) { callT0 = true; }
     if (callT1 === void 0) { callT1 = true; }
-    console.log("Calling with v2 schema (pairs)");
+    // console.log("Calling with v2 schema (pairs)");
     // console.log(address, amt, skipT0, skipT1, callT0, callT1)
     var generalReq = "orderBy:reserveUSD\n  orderDirection:desc){\n      id\n    token1{\n      id\n    }\n    token0{\n      id\n    }\n\n    totalValueLockedToken0:reserve0\n    totalValueLockedToken1:reserve1\n  }";
     var t0Match = "t0IsMatch: pairs(first:1000 skip:".concat(skipT0, " where:{token0_contains:\"").concat(address, "\", volumeUSD_gt:\"100000\" reserve0_gt:\"").concat(amt, "\"}\n  ").concat(generalReq);

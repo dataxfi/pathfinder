@@ -8,7 +8,7 @@
  */
 
 export function uniswapV2Query(address: string, amt: string, skipT0: number = 0, skipT1: number = 0, callT0: boolean = true, callT1: boolean = true) {
-  console.log("Calling with v2 schema (pairs)");
+  // console.log("Calling with v2 schema (pairs)");
   // console.log(address, amt, skipT0, skipT1, callT0, callT1)
   const generalReq = `orderBy:reserveUSD
   orderDirection:desc){

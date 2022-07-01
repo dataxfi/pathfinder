@@ -54,6 +54,7 @@ var Pathfinder = /** @class */ (function () {
         this.allPaths = [];
         this.depth = 0;
         this.pathFound = false;
+        this.totalAPIRequest = 0;
         this.nodes = {};
         this.tokensChecked = new Set();
         this.pendingQueries = new Set();
@@ -198,17 +199,22 @@ var Pathfinder = /** @class */ (function () {
                             return [2 /*return*/];
                         // add token address to pending queries and call fetch function with address
                         this.pendingQueries.add(tokenAddress);
+                        this.totalAPIRequest++;
                         return [4 /*yield*/, this.fetchFunction(tokenAddress, amt, skipT0, skipT1, callT0, callT1)];
                     case 2:
                         response = _h.sent();
-                        console.log("Response for " + tokenAddress, response);
                         t0MatchLength = 0, t1MatchLength = 0, allMatchedPools = [];
-                        if (response.t0MatchLength)
-                            t0MatchLength = response.t0MatchLength;
-                        if (response.t1MatchLength)
-                            t1MatchLength = response.t1MatchLength;
-                        if (response.allMatchedPools)
-                            allMatchedPools = response.allMatchedPools;
+                        try {
+                            if (response.t0MatchLength)
+                                t0MatchLength = response.t0MatchLength;
+                            if (response.t1MatchLength)
+                                t1MatchLength = response.t1MatchLength;
+                            if (response.allMatchedPools)
+                                allMatchedPools = response.allMatchedPools;
+                        }
+                        catch (error) {
+                            console.error("Could not destructure something.");
+                        }
                         if (allMatchedPools.length === 0)
                             return [2 /*return*/];
                         poolsFromToken.push.apply(poolsFromToken, allMatchedPools);
@@ -379,6 +385,7 @@ var Pathfinder = /** @class */ (function () {
                                     this.pathFound = false;
                                     this.allPaths = [];
                                     this.tokensChecked = new Set();
+                                    // this.totalAPIRequest = 0;
                                     tokenAddress = tokenAddress.toLowerCase();
                                     destinationAddress = destinationAddress.toLowerCase();
                                     if (!this.userTokenIn)
@@ -396,6 +403,7 @@ var Pathfinder = /** @class */ (function () {
                                     return [4 /*yield*/, this.resolveAllPaths()];
                                 case 3:
                                     path = _a.sent();
+                                    console.log("Total API requests: ", this.totalAPIRequest);
                                     return [2 /*return*/, resolve(path)];
                                 case 4:
                                     error_3 = _a.sent();
