@@ -7,17 +7,17 @@ import { uniswapV2Query, uniswapV3Query } from "./subgraph-queries";
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-export async function uniswapV2Req(url: string, address: string, amt: string, skipT0: number, skipT1: number, callT0: boolean, callT1: boolean) {
+export async function uniswapV2Req(url: string, address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
   try {
     const response = await axios.post(
       url,
       {
-        query: uniswapV2Query(address, amt, skipT0, skipT1, callT0, callT1),
+        query: uniswapV2Query(address, skipT0, skipT1, callT0, callT1),
       },
       { timeout: 600000 }
     );
     // console.info("Response for token" + address + ":" + response);
-    return formatter(response);
+    return formatter(response, address);
   } catch (error) {
     console.error(error);
   }
@@ -28,18 +28,18 @@ export async function uniswapV2Req(url: string, address: string, amt: string, sk
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-export async function uniswapV3Req(url: string, address: string, amt: string, skipT0: number, skipT1: number, callT0: boolean, callT1: boolean) {
-  try {
-    const uniswap = await axios.post(
-      url,
-      {
-        query: uniswapV3Query(address, amt, skipT0, skipT1, callT0, callT1),
-      },
-      { timeout: 600000 }
-    );
-    // console.info("Response for token" + address + ":" + uniswap);
-    return formatter(uniswap);
-  } catch (error) {
-    console.error(error);
-  }
-}
+// export async function uniswapV3Req(url: string, address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+//   try {
+//     const uniswap = await axios.post(
+//       url,
+//       {
+//         query: uniswapV3Query(address, skipT0, skipT1, callT0, callT1),
+//       },
+//       { timeout: 600000 }
+//     );
+//     // console.info("Response for token" + address + ":" + uniswap);
+//     return formatter(uniswap);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }

@@ -6,20 +6,16 @@ const failed = (param: string) => {
 };
 
 export const post = asyncErrorBoundary(async (req, res) => {
-  const { chainId, tokenIn, tokenOut, amt, IN } = req.body;
+  const { chainId, tokenIn, tokenOut } = req.body;
 
   if (!chainId) failed("chainId");
   if (!tokenIn) failed("tokenIn");
   if (!tokenOut) failed("tokenOut");
-  if (IN === undefined && amt) failed("IN along with amt");
-  if (!amt && IN !== undefined) failed("amt along with IN");
 
   const pathfinder = new Pathfinder(chainId);
   const path = await pathfinder.getTokenPath({
     tokenAddress: tokenIn,
     destinationAddress: tokenOut,
-    IN,
-    amt,
   });
 
   if (path) {
