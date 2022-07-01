@@ -349,7 +349,7 @@ export default class Pathfinder {
   }: {
     tokenAddress: string;
     destinationAddress: string;
-    IN: boolean;
+    IN?: boolean;
     parentTokenAddress?: string;
     amt?: string;
     abortSignal?: AbortSignal;
