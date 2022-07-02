@@ -6,7 +6,7 @@ export interface IPoolNode {
   totalValueLockedToken1: string;
 }
 export interface INextTokensToSearch {
-  [tokenAdress: number]: { parentToken: string;};
+  [tokenAdress: number]: { parentToken: string };
 }
 
 export interface IPoolGraph {
@@ -40,3 +40,6 @@ export interface requestResponse {
 
 export type queryFunction = (address: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) => Promise<requestResponse[]>;
 export type supportedChains = "1" | "4" | "56" | "137" | "246" | "1285";
+export type succesfulResponse = [string[], number];
+export type failedResponse = [string, number];
+export type pathfinderResponse = succesfulResponse | failedResponse;

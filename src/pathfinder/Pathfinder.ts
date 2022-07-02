@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import { IPoolGraph, IPoolNode, ITokenGraph, queryFunction, queryParams, supportedChains } from "../@types";
+import { IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
 import { mainnetPools, maticPools } from "../util";
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
@@ -209,12 +209,20 @@ export default class Pathfinder {
    * @param param0
    * @returns
    */
-  public async getTokenPath({ tokenAddress, destinationAddress, abortSignal }: { tokenAddress: string; destinationAddress: string; abortSignal?: AbortSignal }): Promise<string[] | string> {
-    const timeout: Promise<string> = new Promise((res, rej) => {
-      setTimeout(res, this.maxQueryTime, tokenAddress);
+  public async getTokenPath({
+    tokenAddress,
+    destinationAddress,
+    abortSignal,
+  }: {
+    tokenAddress: string;
+    destinationAddress: string;
+    abortSignal?: AbortSignal;
+  }): Promise<pathfinderResponse> {
+    const timeout: Promise<[string, number]> = new Promise((res, rej) => {
+      setTimeout(res, this.maxQueryTime, [tokenAddress, this.totalAPIRequest]);
     });
 
-    const path: Promise<string[]> = new Promise(async (resolve, reject) => {
+    const path: Promise<pathfinderResponse> = new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
         return reject(new Error("Aborted"));
       });
@@ -225,7 +233,6 @@ export default class Pathfinder {
         this.pathFound = false;
         this.allPaths = [];
         this.tokensChecked = new Set();
-        // this.totalAPIRequest = 0;
 
         tokenAddress = tokenAddress.toLowerCase();
         destinationAddress = destinationAddress.toLowerCase();
@@ -234,7 +241,11 @@ export default class Pathfinder {
         if (!this.userTokenOut) this.userTokenOut = destinationAddress;
 
         if (tokenAddress === destinationAddress) {
-          return resolve([tokenAddress]);
+          return resolve([[tokenAddress], this.totalAPIRequest]);
+        }
+
+        if (this.totalAPIRequest === 999) {
+          resolve([tokenAddress, this.totalAPIRequest]);
         }
 
         await this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress });
@@ -248,7 +259,7 @@ export default class Pathfinder {
 
         const path = await this.resolveAllPaths();
         console.log("Total API requests: ", this.totalAPIRequest);
-        return resolve(path);
+        return resolve([path, this.totalAPIRequest]);
       } catch (error) {
         console.error(error);
       }

@@ -46,9 +46,12 @@ async function getTokenPaths(chains: supportedChains[]) {
     for (let [chain, list] of Object.entries(tokenLists)) {
       // max time for a github job is 1 hour, so limit the query time by list length
       const maxQueryTime = (3500 / list.length) * 1000;
-      const reFetch: IReFetch = { [chain]: [] };
+
       //collect failed addresses
-      //run a second job for the path for failed tokens
+      const reFetch: IReFetch = { [chain]: [] };
+      
+      //TODO: run a second job for the path for failed tokens
+
       if (list.length > 0) {
         const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
         const pathToPathsFromOcean = `src/storage/chain${chain}/pathsFromOcean.json`;
@@ -57,25 +60,31 @@ async function getTokenPaths(chains: supportedChains[]) {
         const existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
         let tokenCount = 0;
 
+        const writeToReFetch = (address) => {
+          reFetch[chain].push(address);
+          fs.writeFileSync(`src/storage/getOceanPaths.ts`, JSON.stringify(reFetch));
+        };
+
         for (const token of list) {
           tokenCount++;
           const tokenAddress = token.address;
           const destinationAddress = oceanAddresses[chain];
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-          const path = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
-          if (Array.isArray(path)) {
+          const [path, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
+          if (totalAPIRequest === 999) {
+            // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
+            writeToReFetch(path);
+          } else if (Array.isArray(path)) {
             existingPathsToOcean[tokenAddress] = path;
             existingPathFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
-            reFetch[chain].push(path);
-            fs.writeFileSync(`src/storage/getOceanPaths.ts`, JSON.stringify(reFetch));
+            writeToReFetch(path);
           }
         }
       }
-
     }
   } catch (error) {
     console.error(error);

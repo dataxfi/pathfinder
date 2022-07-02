@@ -1,0 +1,34 @@
+##  RUN JOB TO GET FAILED TOKEN PATHS
+
+# on: push
+#   # schedule:
+#   # - cron: "* */6 * * *"
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#         with:
+#           persist-credentials: false
+#           fetch-depth: 0 
+#       - uses: borales/actions-yarn@v3.0.0
+#         with:
+#             cmd: install
+#       - uses: borales/actions-yarn@v3.0.0
+#         with:
+#             cmd: tsc
+#       - name: Run GetOceanPaths
+#         run: |
+#           yarn run getOceanPaths
+#       - name: Commit changes
+#         run: |
+#           git add src/storage/chain137
+#           git config --local user.email "actions@action.github.com"
+#           git config --local user.name "github-actions[bot]"
+#           git commit -m "Updating token paths" -a
+#       - name: Push changes
+#         uses: ad-m/github-push-action@master
+#         with:
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
+#           branch: ${{ github.ref }} 
