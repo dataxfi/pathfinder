@@ -242,7 +242,7 @@ var Pathfinder = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_b) {
                 timeout = new Promise(function (res, rej) {
-                    setTimeout(res, _this.maxQueryTime, tokenAddress);
+                    setTimeout(res, _this.maxQueryTime, [tokenAddress, _this.totalAPIRequest]);
                 });
                 path = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
                     var path_1, path_2, error_2;
@@ -260,7 +260,6 @@ var Pathfinder = /** @class */ (function () {
                                 this.pathFound = false;
                                 this.allPaths = [];
                                 this.tokensChecked = new Set();
-                                // this.totalAPIRequest = 0;
                                 tokenAddress = tokenAddress.toLowerCase();
                                 destinationAddress = destinationAddress.toLowerCase();
                                 if (!this.userTokenIn)
@@ -268,7 +267,10 @@ var Pathfinder = /** @class */ (function () {
                                 if (!this.userTokenOut)
                                     this.userTokenOut = destinationAddress;
                                 if (tokenAddress === destinationAddress) {
-                                    return [2 /*return*/, resolve([tokenAddress])];
+                                    return [2 /*return*/, resolve([[tokenAddress], this.totalAPIRequest])];
+                                }
+                                if (this.totalAPIRequest === 999) {
+                                    resolve([tokenAddress, this.totalAPIRequest]);
                                 }
                                 return [4 /*yield*/, this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress: destinationAddress })];
                             case 2:
@@ -283,7 +285,7 @@ var Pathfinder = /** @class */ (function () {
                             case 3:
                                 path_2 = _a.sent();
                                 console.log("Total API requests: ", this.totalAPIRequest);
-                                return [2 /*return*/, resolve(path_2)];
+                                return [2 /*return*/, resolve([path_2, this.totalAPIRequest])];
                             case 4:
                                 error_2 = _a.sent();
                                 console.error(error_2);
