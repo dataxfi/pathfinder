@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import { IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
+import { failedResponse, IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
 import { mainnetPools, maticPools } from "../util";
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
@@ -222,6 +222,7 @@ export default class Pathfinder {
       setTimeout(res, this.maxQueryTime, [tokenAddress, this.totalAPIRequest]);
     });
 
+    const basResponse: failedResponse = [tokenAddress, this.totalAPIRequest];
     const path: Promise<pathfinderResponse> = new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
         return reject(new Error("Aborted"));
@@ -245,7 +246,7 @@ export default class Pathfinder {
         }
 
         if (this.totalAPIRequest === 999) {
-          resolve([tokenAddress, this.totalAPIRequest]);
+          resolve(basResponse);
         }
 
         await this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress });
@@ -261,7 +262,7 @@ export default class Pathfinder {
         console.log("Total API requests: ", this.totalAPIRequest);
         return resolve([path, this.totalAPIRequest]);
       } catch (error) {
-        console.error(error);
+        return resolve(basResponse);
       }
     });
 
