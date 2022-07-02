@@ -54,15 +54,15 @@ async function getTokenPaths(chains: supportedChains[]) {
 
       if (list.length > 0) {
         const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
-        const pathToPathsFromOcean = `src/storage/chain${chain}/pathsFromOcean.json`;
-        const pathToPathsToOcean = `src/storage/chain${chain}/pathsToOcean.json`;
+        const pathToPathsFromOcean = `storage/chain${chain}/pathsFromOcean.json`;
+        const pathToPathsToOcean = `storage/chain${chain}/pathsToOcean.json`;
         const existingPathFromOcean = fs.readFileSync(pathToPathsFromOcean).toJSON();
         const existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
         let tokenCount = 0;
 
         const writeToReFetch = (address) => {
           reFetch[chain].push(address);
-          fs.writeFileSync(`src/storage/getOceanPaths.ts`, JSON.stringify(reFetch));
+          fs.writeFileSync(`storage/getOceanPaths.ts`, JSON.stringify(reFetch));
         };
 
         for (const token of list) {
