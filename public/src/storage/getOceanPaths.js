@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var axios_1 = require("axios");
 var pathfinder_1 = require("../pathfinder");
-var fs_1 = require("fs");
+var fs = require("fs");
 var oceanAddresses = {
     "1": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
     "4": "0x8967bcf84170c91b0d24d4302c2376283b0b3a07",
@@ -54,9 +54,10 @@ var oceanAddresses = {
  */
 function getTokenPaths(chains) {
     return __awaiter(this, void 0, void 0, function () {
-        var urls, tokenLists, _i, chains_1, chain, tokens, _a, _b, _c, chain, list, pathfinder, pathsToOcean, pathsFromOcean, pathPromises, _d, list_1, token, tokenAddress, destinationAddress, path, pathToPathsFromOcean, pathToPathsToOcean;
-        return __generator(this, function (_e) {
-            switch (_e.label) {
+        var urls, tokenLists, _i, chains_1, chain, tokens, _a, _b, _c, chain, list, maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean, existingPathsToOcean, tokenCount, _d, list_1, token, tokenAddress, destinationAddress, path, error_1;
+        var _e;
+        return __generator(this, function (_f) {
+            switch (_f.label) {
                 case 0:
                     console.log("Getting token paths for chains:", chains);
                     urls = {
@@ -70,64 +71,77 @@ function getTokenPaths(chains) {
                         "4": [],
                         "56": [],
                     };
-                    _i = 0, chains_1 = chains;
-                    _e.label = 1;
+                    _f.label = 1;
                 case 1:
-                    if (!(_i < chains_1.length)) return [3 /*break*/, 4];
+                    _f.trys.push([1, 12, , 13]);
+                    _i = 0, chains_1 = chains;
+                    _f.label = 2;
+                case 2:
+                    if (!(_i < chains_1.length)) return [3 /*break*/, 5];
                     chain = chains_1[_i];
                     console.log("Getting token list for chain: ", chain);
                     return [4 /*yield*/, axios_1.default.get(urls[chain])];
-                case 2:
-                    tokens = (_e.sent()).data.tokens;
+                case 3:
+                    tokens = (_f.sent()).data.tokens;
                     tokenLists[chain] = tokens;
                     console.log("Token amount on chain:", tokens.length);
-                    _e.label = 3;
-                case 3:
-                    _i++;
-                    return [3 /*break*/, 1];
+                    _f.label = 4;
                 case 4:
-                    _a = 0, _b = Object.entries(tokenLists);
-                    _e.label = 5;
+                    _i++;
+                    return [3 /*break*/, 2];
                 case 5:
+                    _a = 0, _b = Object.entries(tokenLists);
+                    _f.label = 6;
+                case 6:
                     if (!(_a < _b.length)) return [3 /*break*/, 11];
                     _c = _b[_a], chain = _c[0], list = _c[1];
+                    maxQueryTime = (3500 / list.length) * 1000;
+                    reFetch = (_e = {}, _e[chain] = [], _e);
                     if (!(list.length > 0)) return [3 /*break*/, 10];
-                    pathfinder = new pathfinder_1.Pathfinder(chain);
-                    pathsToOcean = {};
-                    pathsFromOcean = {};
-                    pathPromises = [];
+                    pathfinder = new pathfinder_1.Pathfinder(chain, maxQueryTime);
+                    pathToPathsFromOcean = "src/storage/chain".concat(chain, "/pathsFromOcean.json");
+                    pathToPathsToOcean = "src/storage/chain".concat(chain, "/pathsToOcean.json");
+                    existingPathFromOcean = fs.readFileSync(pathToPathsFromOcean).toJSON();
+                    existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
+                    tokenCount = 0;
                     _d = 0, list_1 = list;
-                    _e.label = 6;
-                case 6:
-                    if (!(_d < list_1.length)) return [3 /*break*/, 9];
+                    _f.label = 7;
+                case 7:
+                    if (!(_d < list_1.length)) return [3 /*break*/, 10];
                     token = list_1[_d];
+                    tokenCount++;
                     tokenAddress = token.address;
                     destinationAddress = oceanAddresses[chain];
-                    console.log("Finding path for: " + tokenAddress);
+                    console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
                     return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress })];
-                case 7:
-                    path = _e.sent();
-                    pathsToOcean[tokenAddress] = path;
-                    pathsFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
-                    _e.label = 8;
                 case 8:
-                    _d++;
-                    return [3 /*break*/, 6];
+                    path = _f.sent();
+                    if (Array.isArray(path)) {
+                        existingPathsToOcean[tokenAddress] = path;
+                        existingPathFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
+                        fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
+                        fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
+                    }
+                    else {
+                        reFetch[chain].push(path);
+                        fs.writeFileSync("src/storage/getOceanPaths.ts", JSON.stringify(reFetch));
+                    }
+                    _f.label = 9;
                 case 9:
-                    pathToPathsFromOcean = "./chain".concat(chain, "/pathsFromOcean.json");
-                    pathToPathsToOcean = "./chain".concat(chain, "/pathsToOcean.json");
-                    fs_1.default.writeFileSync(pathToPathsFromOcean, JSON.stringify(pathsFromOcean));
-                    fs_1.default.writeFileSync(pathToPathsToOcean, JSON.stringify(pathsToOcean));
-                    _e.label = 10;
+                    _d++;
+                    return [3 /*break*/, 7];
                 case 10:
                     _a++;
-                    return [3 /*break*/, 5];
-                case 11: return [2 /*return*/];
+                    return [3 /*break*/, 6];
+                case 11: return [3 /*break*/, 13];
+                case 12:
+                    error_1 = _f.sent();
+                    console.error(error_1);
+                    return [3 /*break*/, 13];
+                case 13: return [2 /*return*/];
             }
         });
     });
 }
-getTokenPaths(["137"])
-    .then(function () { return console.log("All done yo!"); })
-    .catch(console.error);
+getTokenPaths(["137"]).then(function () { return console.log("All done yo!"); });
 //# sourceMappingURL=getOceanPaths.js.map

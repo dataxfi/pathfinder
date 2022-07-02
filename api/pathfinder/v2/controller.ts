@@ -12,7 +12,7 @@ export const post = asyncErrorBoundary(async (req, res) => {
   if (!tokenIn) failed("tokenIn");
   if (!tokenOut) failed("tokenOut");
 
-  const pathfinder = new Pathfinder(chainId);
+  const pathfinder = new Pathfinder(chainId, 30000);
   const path = await pathfinder.getTokenPath({
     tokenAddress: tokenIn,
     destinationAddress: tokenOut,

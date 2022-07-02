@@ -1,7 +1,7 @@
 import axios from "axios";
-import { supportedChains, ITokenInfoList, IPathStorage } from "../@types";
+import { supportedChains, ITokenInfoList, IPathStorage, IReFetch } from "../@types";
 import { Pathfinder } from "../pathfinder";
-import fs from "fs";
+import * as fs from "fs";
 
 const oceanAddresses = {
   "1": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
@@ -32,41 +32,54 @@ async function getTokenPaths(chains: supportedChains[]) {
     "56": [],
   };
 
-  for (const chain of chains) {
-    console.log("Getting token list for chain: ", chain);
-    const {
-      data: { tokens },
-    } = await axios.get(urls[chain]);
+  try {
+    for (const chain of chains) {
+      console.log("Getting token list for chain: ", chain);
+      const {
+        data: { tokens },
+      } = await axios.get(urls[chain]);
 
-    tokenLists[chain] = tokens;
-    console.log("Token amount on chain:", tokens.length);
-  }
+      tokenLists[chain] = tokens;
+      console.log("Token amount on chain:", tokens.length);
+    }
 
-  for (let [chain, list] of Object.entries(tokenLists)) {
-    if (list.length > 0) {
-      const pathfinder = new Pathfinder(chain as supportedChains);
-      const pathsToOcean: IPathStorage = {};
-      const pathsFromOcean: IPathStorage = {};
+    for (let [chain, list] of Object.entries(tokenLists)) {
+      // max time for a github job is 1 hour, so limit the query time by list length
+      const maxQueryTime = (3500 / list.length) * 1000;
+      const reFetch: IReFetch = { [chain]: [] };
+      //collect failed addresses
+      //run a second job for the path for failed tokens
+      if (list.length > 0) {
+        const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
+        const pathToPathsFromOcean = `src/storage/chain${chain}/pathsFromOcean.json`;
+        const pathToPathsToOcean = `src/storage/chain${chain}/pathsToOcean.json`;
+        const existingPathFromOcean = fs.readFileSync(pathToPathsFromOcean).toJSON();
+        const existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
+        let tokenCount = 0;
 
-      for (const token of list) {
-        const tokenAddress = token.address;
-        const destinationAddress = oceanAddresses[chain];
+        for (const token of list) {
+          tokenCount++;
+          const tokenAddress = token.address;
+          const destinationAddress = oceanAddresses[chain];
 
-        console.log("Finding path for: " + tokenAddress);
-        const path = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
-        pathsToOcean[tokenAddress] = path;
-        pathsFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
+          console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
+          const path = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
+          if (Array.isArray(path)) {
+            existingPathsToOcean[tokenAddress] = path;
+            existingPathFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
+            fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
+            fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
+          } else {
+            reFetch[chain].push(path);
+            fs.writeFileSync(`src/storage/getOceanPaths.ts`, JSON.stringify(reFetch));
+          }
+        }
       }
 
-      const pathToPathsFromOcean = `./chain${chain}/pathsFromOcean.json`;
-      const pathToPathsToOcean = `./chain${chain}/pathsToOcean.json`;
-
-      fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(pathsFromOcean));
-      fs.writeFileSync(pathToPathsToOcean, JSON.stringify(pathsToOcean));
     }
+  } catch (error) {
+    console.error(error);
   }
 }
 
-getTokenPaths(["137"])
-  .then(() => console.log("All done yo!"))
-  .catch(console.error);
+getTokenPaths(["137"]).then(() => console.log("All done yo!"));

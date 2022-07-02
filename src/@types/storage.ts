@@ -17,3 +17,9 @@ export type ITokenInfoList = {
 export interface IPathStorage {
   [tokenAddress: string]: string[];
 }
+
+export type address = string
+export type chainId = string
+export interface IReFetch {
+  [key:chainId]: address[];
+}

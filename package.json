@@ -12,6 +12,7 @@
     "build": "yarn tsc",
     "prestart": "yarn run build",
     "start": "node public/index.js",
+    "getOceanPaths":"node public/src/storage/getOceanPaths.js",
     "test": "yarn jest --detectOpenHandles"
   },
   "devDependencies": {

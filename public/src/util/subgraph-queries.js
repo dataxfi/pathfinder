@@ -9,28 +9,18 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uniswapV3Query = exports.uniswapV2Query = void 0;
-<<<<<<< HEAD
-function uniswapV2Query(address, amt, skipT0, skipT1, callT0, callT1) {
-    if (skipT0 === void 0) { skipT0 = 0; }
-    if (skipT1 === void 0) { skipT1 = 0; }
-    if (callT0 === void 0) { callT0 = true; }
-    if (callT1 === void 0) { callT1 = true; }
-    // console.log("Calling with v2 schema (pairs)");
-=======
 function uniswapV2Query(addresses, skipT0, skipT1, callT0, callT1) {
     if (skipT0 === void 0) { skipT0 = [0]; }
     if (skipT1 === void 0) { skipT1 = [0]; }
     if (callT0 === void 0) { callT0 = [true]; }
     if (callT1 === void 0) { callT1 = [true]; }
-    console.log("Calling with v2 schema (pairs)");
->>>>>>> newSearch
-    // console.log(address, amt, skipT0, skipT1, callT0, callT1)
     var generalReq = "orderBy:reserveUSD\n  orderDirection:desc){\n      id\n    token1{\n      id\n    }\n    token0{\n      id\n    }\n\n    totalValueLockedToken0:reserve0\n    totalValueLockedToken1:reserve1\n  }";
     var queries = [];
+    // ${skipT0[index]}${skipT1[index]}
     addresses.forEach(function (address, index) {
-        var t0Match = "t0IsMatch".concat(address, ": pairs(first:1000 skip:").concat(skipT0[index], " where:{token0_contains:\"").concat(address, "\", volumeUSD_gt:\"10000\"}\n    ").concat(generalReq);
-        var t1Match = "t1IsMatch".concat(address, ": pairs(first:1000 skip:").concat(skipT1[index], " where:{token1_contains:\"").concat(address, "\", volumeUSD_gt:\"10000\"}\n    ").concat(generalReq);
-        queries.push("\n    ".concat(callT0[index] ? t0Match : "", "\n    ").concat(callT1[index] ? t1Match : "", "\n    "));
+        var t0Match = "t0IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token0_contains:\"").concat(address, "\", volumeUSD_gt:\"100\"}\n    ").concat(generalReq);
+        var t1Match = "t1IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token1_contains:\"").concat(address, "\", volumeUSD_gt:\"100\"}\n    ").concat(generalReq);
+        queries.push("\n    ".concat(callT0[0] ? t0Match : "", "\n    ").concat(callT1[0] ? t1Match : "", "\n    "));
     });
     var query = "\n    query {\n      ".concat(queries.join("\n"), "\n    }\n  ");
     // console.log(query)

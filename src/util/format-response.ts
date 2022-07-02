@@ -12,7 +12,6 @@ export function formatter(response: any, address: string[]) {
       data: { data },
     } = response;
 
-    console.log(response);
 
     const requestResponse: requestResponse[] = [];
 

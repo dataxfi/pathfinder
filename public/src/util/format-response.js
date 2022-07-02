@@ -21,7 +21,6 @@ function formatter(response, address) {
         return;
     try {
         var data_1 = response.data.data;
-        console.log(response);
         var requestResponse_1 = [];
         address.forEach(function (address) {
             var t0Match = data_1["t0IsMatch".concat(address)];

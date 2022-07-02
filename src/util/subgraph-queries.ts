@@ -8,8 +8,7 @@
  */
 
 export function uniswapV2Query(addresses: string[], skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
-  console.log("Calling with v2 schema (pairs)");
-  // console.log(address, amt, skipT0, skipT1, callT0, callT1)
+  
   const generalReq = `orderBy:reserveUSD
   orderDirection:desc){
       id
@@ -25,17 +24,17 @@ export function uniswapV2Query(addresses: string[], skipT0: number[] = [0], skip
   }`;
 
   const queries = [];
-
+// ${skipT0[index]}${skipT1[index]}
   addresses.forEach((address, index) => {
-    const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:${skipT0[index]} where:{token0_contains:"${address}", volumeUSD_gt:"10000"}
+    const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:0 where:{token0_contains:"${address}", volumeUSD_gt:"100"}
     ${generalReq}`;
 
-    const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:${skipT1[index]} where:{token1_contains:"${address}", volumeUSD_gt:"10000"}
+    const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:0 where:{token1_contains:"${address}", volumeUSD_gt:"100"}
     ${generalReq}`;
 
     queries.push(`
-    ${callT0[index] ? t0Match : ""}
-    ${callT1[index] ? t1Match : ""}
+    ${callT0[0] ? t0Match : ""}
+    ${callT1[0] ? t1Match : ""}
     `);
   });
 

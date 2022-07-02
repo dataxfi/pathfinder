@@ -54,7 +54,7 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
                     failed("tokenIn");
                 if (!tokenOut)
                     failed("tokenOut");
-                pathfinder = new pathfinder_1.Pathfinder(chainId);
+                pathfinder = new pathfinder_1.Pathfinder(chainId, 30000);
                 return [4 /*yield*/, pathfinder.getTokenPath({
                         tokenAddress: tokenIn,
                         destinationAddress: tokenOut,
