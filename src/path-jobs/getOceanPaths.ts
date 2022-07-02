@@ -44,12 +44,13 @@ async function getTokenPaths(chains: supportedChains[]) {
     }
 
     for (let [chain, list] of Object.entries(tokenLists)) {
-      // max time for a github job is 1 hour, so limit the query time by list length
-      const maxQueryTime = (3500 / list.length) * 1000;
+      // max time for a github job is 6 hours, so limit the query time by list length
+      // (using 20000 instead of 21600)
+      const maxQueryTime = (20000 / list.length) * 1000;
 
       //collect failed addresses
       const reFetch: IReFetch = { [chain]: [] };
-      
+
       //TODO: run a second job for the path for failed tokens
 
       if (list.length > 0) {
