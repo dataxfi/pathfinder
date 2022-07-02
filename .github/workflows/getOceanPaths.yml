@@ -21,7 +21,7 @@ jobs:
           yarn run getOceanPaths
       - name: Commit changes
         run: |
-          git add src/storage/chain137
+          git add storage/chain137
           git config --local user.email "actions@action.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Updating token paths" -a
