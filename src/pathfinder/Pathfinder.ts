@@ -161,51 +161,46 @@ export default class Pathfinder {
     let { skipT0, skipT1, callT0, callT1 } = queryParams;
     this.totalAPIRequest++;
     const allTokensResponse = await this.fetchFunction(tokenAddresses, skipT0, skipT1, callT0, callT1);
+    for (let i = 0; i < allTokensResponse.length; i++) {
+      const response = allTokensResponse[i];
+      if (response && response.allMatchedPools.length > 0) {
+        const { t0MatchLength, t1MatchLength, allMatchedPools } = response;
+        // skip tokens already searched
+        const tokenAddress = tokenAddresses[i];
+        if (this.tokensChecked.has(tokenAddress)) return;
 
-    try {
-      for (let i = 0; i < allTokensResponse.length; i++) {
-        const response = allTokensResponse[i];
-        if (response && response.allMatchedPools.length > 0) {
-          const { t0MatchLength, t1MatchLength, allMatchedPools } = response;
-          // skip tokens already searched
-          const tokenAddress = tokenAddresses[i];
-          if (this.tokensChecked.has(tokenAddress)) return;
+        if (allMatchedPools.length === 0) return;
 
-          if (allMatchedPools.length === 0) return;
+        //search all matched pools for user token out
+        const searchResponse = await this.searchPoolData({
+          poolsFromToken: allMatchedPools,
+          tokenAddress,
+          destinationAddress,
+          parentTokenAddresses,
+          parentIndex: i,
+        });
 
-          //search all matched pools for user token out
-          const searchResponse = await this.searchPoolData({
-            poolsFromToken: allMatchedPools,
-            tokenAddress,
-            destinationAddress,
-            parentTokenAddresses,
-            parentIndex: i,
-          });
-
-          if (searchResponse) {
-            const [nextTokensToSearch, nextParentTokenAddresses] = searchResponse;
-            if (!thisNextParentTokenAddresses && nextTokensToSearch) {
-              thisNextParentTokenAddresses = [];
-              thisNextTokensToSearch = [];
-            }
-
-            thisNextParentTokenAddresses = [...thisNextParentTokenAddresses, ...nextParentTokenAddresses];
-            thisNextTokensToSearch = [...thisNextTokensToSearch, ...nextTokensToSearch];
-            this.tokensChecked.add(tokenAddress);
-          } else {
-            return null;
+        if (searchResponse) {
+          const [nextTokensToSearch, nextParentTokenAddresses] = searchResponse;
+          if (!thisNextParentTokenAddresses && nextTokensToSearch) {
+            thisNextParentTokenAddresses = [];
+            thisNextTokensToSearch = [];
           }
+
+          thisNextParentTokenAddresses = [...thisNextParentTokenAddresses, ...nextParentTokenAddresses];
+          thisNextTokensToSearch = [...thisNextTokensToSearch, ...nextTokensToSearch];
+          this.tokensChecked.add(tokenAddress);
+        } else {
+          return null;
         }
       }
-
-      if (thisNextTokensToSearch) {
-        await this.getPoolData({ tokenAddresses: thisNextTokensToSearch, destinationAddress, parentTokenAddresses: thisNextParentTokenAddresses, poolsFromToken, queryParams });
-      }
-
-      return thisNextTokensToSearch;
-    } catch (error) {
-      console.error("An error occured:", error);
     }
+
+    if (thisNextTokensToSearch) {
+      await this.getPoolData({ tokenAddresses: thisNextTokensToSearch, destinationAddress, parentTokenAddresses: thisNextParentTokenAddresses, poolsFromToken, queryParams });
+    }
+
+    return thisNextTokensToSearch;
   }
 
   /**
@@ -242,8 +237,8 @@ export default class Pathfinder {
         tokenAddress = tokenAddress.toLowerCase();
         destinationAddress = destinationAddress.toLowerCase();
 
-        if (!this.userTokenIn) this.userTokenIn = tokenAddress;
-        if (!this.userTokenOut) this.userTokenOut = destinationAddress;
+        this.userTokenIn = tokenAddress;
+        this.userTokenOut = destinationAddress;
 
         if (tokenAddress === destinationAddress) {
           return resolve([[tokenAddress], [], this.totalAPIRequest]);

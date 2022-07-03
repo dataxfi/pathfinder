@@ -2,20 +2,14 @@ import { requestResponse } from "../@types";
 
 /**
  * Formats query responses into one standard object.
- * @param response
+ * @param data
  * @returns IPoolNode[]
  */
-export function formatter(response: any, address: string[]) {
-  if (response.data?.errors) return;
+export function formatter(data: any, addresses: string[]): requestResponse[] {
   try {
-    let {
-      data: { data },
-    } = response;
-
-
     const requestResponse: requestResponse[] = [];
 
-    address.forEach((address) => {
+    addresses.forEach((address) => {
       let t0Match = data[`t0IsMatch${address}`];
       let t1Match = data[`t1IsMatch${address}`];
       if (!t0Match) t0Match = [];
@@ -27,7 +21,7 @@ export function formatter(response: any, address: string[]) {
       requestResponse.push({
         t0MatchLength,
         t1MatchLength,
-        allMatchedPools
+        allMatchedPools,
       });
     });
 

@@ -1,15 +1,4 @@
-/**
- * Builds and returns query for supported chains other than uniswap
- * @param address
- * @param amt
- * @param first
- * @param skip
- * @returns a query as a string
- */
-
-export function uniswapV2Query(addresses: string[], skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
-  
-  const generalReq = `orderBy:reserveUSD
+const v2ReqFields = `orderBy:reserveUSD
   orderDirection:desc){
       id
     token1{
@@ -23,28 +12,74 @@ export function uniswapV2Query(addresses: string[], skipT0: number[] = [0], skip
     totalValueLockedToken1:reserve1
   }`;
 
-  const queries = [];
-// ${skipT0[index]}${skipT1[index]}
+function v2GeneralReq(address: string, callT0: boolean, callT1: boolean) {
+  const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:0 where:{token0_contains:"${address}", volumeUSD_gt:"100"}
+  ${v2ReqFields}`;
+
+  const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:0 where:{token1_contains:"${address}", volumeUSD_gt:"100"}
+  ${v2ReqFields}`;
+
+  return `
+  ${callT0 ? t0Match : ""}
+  ${callT1 ? t1Match : ""}
+  `;
+}
+
+function splitQueryList(addresses: string[]): string[][] | string[] {
+  const finalAddresses = [];
+
+  let splitAmt = addresses.length / 2;
+  let currentSet = [];
+
   addresses.forEach((address, index) => {
-    const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:0 where:{token0_contains:"${address}", volumeUSD_gt:"100"}
-    ${generalReq}`;
-
-    const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:0 where:{token1_contains:"${address}", volumeUSD_gt:"100"}
-    ${generalReq}`;
-
-    queries.push(`
-    ${callT0[0] ? t0Match : ""}
-    ${callT1[0] ? t1Match : ""}
-    `);
+    currentSet.push[address];
+    if (index % splitAmt === 0) {
+      finalAddresses.push(currentSet);
+      currentSet = [];
+    }
   });
 
-  const query = `
-    query {
-      ${queries.join("\n")}
+  return finalAddresses;
+}
+
+function buildQueries(version: 3 | 2, addresses: string[][] | string[], callT0: boolean[], callT1: boolean[]) {
+  const queryFunction = version === 2 ? v2GeneralReq : () => {};
+
+  return addresses.map((addressOrSet: string | string[]) => {
+    if (Array.isArray(addressOrSet)) {
+      return addressOrSet.map((address) => queryFunction(address, callT0[0], callT1[0]));
+    } else {
+      return queryFunction(addressOrSet, callT0[0], callT1[0]);
     }
-  `;
-  // console.log(query)
-  return query;
+  });
+}
+/**
+ * Builds and returns query for supported chains other than uniswap
+ * @param address
+ * @param amt
+ * @param first
+ * @param skip
+ * @returns a query as a string
+ */
+
+export function uniswapV2Query(addresses: string[], split: boolean, skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
+  // ${skipT0[index]}${skipT1[index]}
+
+  const listToUse = split ? splitQueryList(addresses) : addresses;
+  const queries = buildQueries(2, listToUse, callT0, callT1);
+
+  if (Array.isArray(queries[0])) {
+    return queries.map(
+      (querySet: []) => `query {
+      ${querySet.join("\n")}
+    }`
+    );
+  } else {
+    return `
+      query {
+        ${queries.join("\n")}
+      }`;
+  }
 }
 
 /**
@@ -74,7 +109,7 @@ export function uniswapV3Query(addresses: string[], skipT0: number[] = [0], skip
       totalValueLockedToken1
     }`;
 
-    //TODO: Update this use array inputs
+  //TODO: Update this use array inputs
   const t0Match = `t0IsMatch: pools(first:1000 skip:${skipT0} where:{token0_in:["${addresses}"]}
   ${generalReq}`;
 
