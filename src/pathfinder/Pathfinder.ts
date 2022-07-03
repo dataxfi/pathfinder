@@ -17,6 +17,7 @@ export default class Pathfinder {
   private totalAPIRequest: number = 0;
   private maxQueryTime: number = 15;
   private initialQueryParams = { skipT0: [0], skipT1: [0], callT0: [true], callT1: [true] };
+  private split = false;
 
   constructor(chainId: supportedChains, maxQueryTime: number) {
     this.nodes = {};
@@ -160,7 +161,7 @@ export default class Pathfinder {
 
     let { skipT0, skipT1, callT0, callT1 } = queryParams;
     this.totalAPIRequest++;
-    const allTokensResponse = await this.fetchFunction(tokenAddresses, skipT0, skipT1, callT0, callT1);
+    const allTokensResponse = await this.fetchFunction(tokenAddresses, this.split, skipT0, skipT1, callT0, callT1);
     for (let i = 0; i < allTokensResponse.length; i++) {
       const response = allTokensResponse[i];
       if (response && response.allMatchedPools.length > 0) {
@@ -211,10 +212,12 @@ export default class Pathfinder {
   public async getTokenPath({
     tokenAddress,
     destinationAddress,
+    split = false,
     abortSignal,
   }: {
     tokenAddress: string;
     destinationAddress: string;
+    split: boolean;
     abortSignal?: AbortSignal;
   }): Promise<pathfinderResponse> {
     const timeout: Promise<[string, number]> = new Promise((res, rej) => {
@@ -228,6 +231,7 @@ export default class Pathfinder {
       });
 
       try {
+        this.split = split;
         this.depth = 0;
         this.nodes = {};
         this.pathFound = false;

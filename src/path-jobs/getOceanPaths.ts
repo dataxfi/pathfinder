@@ -80,7 +80,7 @@ async function getTokenPaths(chains: supportedChains[]) {
           const destinationAddress = oceanAddresses[chain];
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
+          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split:false });
           if (totalAPIRequest === 999) {
             // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
             writeToReFetch(path);
