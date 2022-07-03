@@ -94,6 +94,7 @@ async function getTokenPaths(chains: supportedChains[]) {
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
+            console.log("Token " + path + "failed, writing to reFetch")
             writeToReFetch(path);
           }
         }
