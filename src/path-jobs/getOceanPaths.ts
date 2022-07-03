@@ -89,6 +89,8 @@ async function getTokenPaths(chains: supportedChains[]) {
             addItem("pathCount", Object.keys(existingPathFromOcean).length);
             existingPathsToOcean[tokenAddress] = { path, amts };
             existingPathFromOcean[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
+            delete existingPathFromOcean["type"]
+            delete existingPathFromOcean["data"]
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
