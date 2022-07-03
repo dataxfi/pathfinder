@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mainnetPools = exports.maticPools = void 0;
 var subgraph_requests_1 = require("./subgraph-requests");
-var minAmt = '100';
+var minAmt = "100";
 /**
  * Returns set of all pools which contain provided address from Energyweb chain (246)
  * @param address
@@ -53,14 +53,18 @@ var minAmt = '100';
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function maticPools(address, skipT0, skipT1, callT0, callT1) {
+function maticPools(address, split, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
+                case 0: return [4 /*yield*/, new Promise(function (res) {
+                        return setTimeout(function () {
+                            res(""), 25;
+                        });
+                    })];
                 case 1:
                     _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://polygon.furadao.org/subgraphs/name/quickswap", address, skipT0, skipT1, callT0, callT1)];
+                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://polygon.furadao.org/subgraphs/name/quickswap", split, address, skipT0, skipT1, callT0, callT1)];
                 case 2: return [2 /*return*/, _a.sent()];
             }
         });
@@ -72,14 +76,18 @@ exports.maticPools = maticPools;
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function mainnetPools(address, skipT0, skipT1, callT0, callT1) {
+function mainnetPools(address, split, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, new Promise(function (res) { return (setTimeout(function () { res(""), 25; })); })];
+                case 0: return [4 /*yield*/, new Promise(function (res) {
+                        return setTimeout(function () {
+                            res(""), 25;
+                        });
+                    })];
                 case 1:
                     _a.sent();
-                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", address, skipT0, skipT1, callT0, callT1)];
+                    return [4 /*yield*/, (0, subgraph_requests_1.uniswapV2Req)("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", split, address, skipT0, skipT1, callT0, callT1)];
                 case 2: return [2 /*return*/, _a.sent()];
             }
         });

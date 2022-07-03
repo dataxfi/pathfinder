@@ -12,19 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.formatter = void 0;
 /**
  * Formats query responses into one standard object.
- * @param response
+ * @param data
  * @returns IPoolNode[]
  */
-function formatter(response, address) {
-    var _a;
-    if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.errors)
-        return;
+function formatter(data, addresses) {
     try {
-        var data_1 = response.data.data;
         var requestResponse_1 = [];
-        address.forEach(function (address) {
-            var t0Match = data_1["t0IsMatch".concat(address)];
-            var t1Match = data_1["t1IsMatch".concat(address)];
+        addresses.forEach(function (address) {
+            var t0Match = data["t0IsMatch".concat(address)];
+            var t1Match = data["t1IsMatch".concat(address)];
             if (!t0Match)
                 t0Match = [];
             if (!t1Match)
@@ -35,7 +31,7 @@ function formatter(response, address) {
             requestResponse_1.push({
                 t0MatchLength: t0MatchLength,
                 t1MatchLength: t1MatchLength,
-                allMatchedPools: allMatchedPools
+                allMatchedPools: allMatchedPools,
             });
         });
         return requestResponse_1;

@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -45,25 +56,48 @@ var subgraph_queries_1 = require("./subgraph-queries");
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-function uniswapV2Req(url, address, skipT0, skipT1, callT0, callT1) {
+function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, error_1;
+        var request, allData, checkFailed, queries, _i, queries_1, query, response, response;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, axios_1.default.post(url, {
-                            query: (0, subgraph_queries_1.uniswapV2Query)(address, skipT0, skipT1, callT0, callT1),
-                        }, { timeout: 600000 })];
+                    request = function (query) {
+                        return axios_1.default.post(url, {
+                            query: query,
+                        }, { timeout: 600000 });
+                    };
+                    allData = {};
+                    checkFailed = function (response) {
+                        var _a;
+                        if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.errors)
+                            throw new Error("Failed to call subgraph");
+                    };
+                    queries = (0, subgraph_queries_1.uniswapV2Query)(addresses, split, skipT0, skipT1, callT0, callT1);
+                    if (!split) return [3 /*break*/, 5];
+                    if (!Array.isArray(queries)) return [3 /*break*/, 4];
+                    _i = 0, queries_1 = queries;
+                    _a.label = 1;
                 case 1:
-                    response = _a.sent();
-                    // console.info("Response for token" + address + ":" + response);
-                    return [2 /*return*/, (0, format_response_1.formatter)(response, address)];
+                    if (!(_i < queries_1.length)) return [3 /*break*/, 4];
+                    query = queries_1[_i];
+                    return [4 /*yield*/, request(query)];
                 case 2:
-                    error_1 = _a.sent();
-                    console.error(error_1);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    response = _a.sent();
+                    checkFailed(response);
+                    allData = __assign(__assign({}, allData), response.data.data);
+                    _a.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4: return [3 /*break*/, 7];
+                case 5: return [4 /*yield*/, request(queries)];
+                case 6:
+                    response = _a.sent();
+                    checkFailed(response);
+                    allData = response.data.data;
+                    _a.label = 7;
+                case 7: return [2 /*return*/, (0, format_response_1.formatter)(allData, addresses)];
             }
         });
     });

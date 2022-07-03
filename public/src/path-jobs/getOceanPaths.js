@@ -96,6 +96,7 @@ function getTokenPaths(chains) {
                             switch (_h.label) {
                                 case 0:
                                     maxQueryTime = (20000 / list.length) * 1000;
+                                    console.log("Max query time for each token: ", maxQueryTime);
                                     reFetch = (_g = {}, _g[chain] = [], _g);
                                     if (!(list.length > 0)) return [3 /*break*/, 4];
                                     pathfinder = new pathfinder_1.Pathfinder(chain, maxQueryTime);
@@ -122,7 +123,7 @@ function getTokenPaths(chains) {
                                     tokenAddress = token.address;
                                     destinationAddress = oceanAddresses[chain];
                                     console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-                                    return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress })];
+                                    return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, split: false })];
                                 case 2:
                                     _f = _h.sent(), path = _f[0], amts = _f[1], totalAPIRequest = _f[2];
                                     if (totalAPIRequest === 999) {
@@ -134,10 +135,13 @@ function getTokenPaths(chains) {
                                         addItem("pathCount", Object.keys(existingPathFromOcean_1).length);
                                         existingPathsToOcean_1[tokenAddress] = { path: path, amts: amts };
                                         existingPathFromOcean_1[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
+                                        delete existingPathFromOcean_1["type"];
+                                        delete existingPathFromOcean_1["data"];
                                         fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean_1));
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));
                                     }
                                     else {
+                                        console.log("Token " + path + "failed, writing to reFetch");
                                         writeToReFetch(path);
                                     }
                                     _h.label = 3;

@@ -16,6 +16,7 @@ export const post = asyncErrorBoundary(async (req, res) => {
   const path = await pathfinder.getTokenPath({
     tokenAddress: tokenIn,
     destinationAddress: tokenOut,
+    split:false
   });
 
   if (path) {

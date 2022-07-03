@@ -2,6 +2,7 @@ import Web3 from "web3";
 import { failedResponse, IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
 import { mainnetPools, maticPools } from "../util";
 import BigNumber from "bignumber.js";
+BigNumber.config({DECIMAL_PLACES: 50})
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
 export default class Pathfinder {
@@ -297,14 +298,15 @@ export default class Pathfinder {
   }
 }
 
-// const pathfinder = new Pathfinder("137", 15000);
-// pathfinder
-//   .getTokenPath({
-//     tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
-//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//   })
-//   .then((r) => console.log("response", r))
-//   .catch(console.error);
+const pathfinder = new Pathfinder("137", 15000);
+pathfinder
+  .getTokenPath({
+    tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+    split: false,
+  })
+  .then((r) => console.log("response", r))
+  .catch(console.error);
 
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found

@@ -64,7 +64,7 @@ async function getTokenPaths(chains: supportedChains[]) {
 
         const writeToReFetch = (address) => {
           reFetch[chain].push(address);
-          fs.writeFileSync(`storage/getOceanPaths.ts`, JSON.stringify(reFetch));
+          fs.writeFileSync(`storage/reFetch.json`, JSON.stringify(reFetch));
         };
 
         const addItem = (key: string, value: any) => {

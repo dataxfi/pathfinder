@@ -58,6 +58,7 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
                 return [4 /*yield*/, pathfinder.getTokenPath({
                         tokenAddress: tokenIn,
                         destinationAddress: tokenOut,
+                        split: false
                     })];
             case 1:
                 path = _b.sent();
