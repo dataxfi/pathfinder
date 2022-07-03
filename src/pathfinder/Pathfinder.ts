@@ -298,14 +298,14 @@ export default class Pathfinder {
   }
 }
 
-const pathfinder = new Pathfinder("137", 15000);
-pathfinder
-  .getTokenPath({
-    tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
-    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-  })
-  .then((r) => console.log("response", r))
-  .catch(console.error);
+// const pathfinder = new Pathfinder("137", 15000);
+// pathfinder
+//   .getTokenPath({
+//     tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+//   })
+//   .then((r) => console.log("response", r))
+//   .catch(console.error);
 
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
