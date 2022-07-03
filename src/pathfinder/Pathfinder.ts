@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import { failedResponse, IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
 import { mainnetPools, maticPools } from "../util";
+import BigNumber from "bignumber.js";
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
 export default class Pathfinder {
@@ -64,9 +65,9 @@ export default class Pathfinder {
    * @param parentTokenAddress The IN token preceeding the prospective OUT tokens.
    */
 
-  private addTokenNode(tokenAdress, parentTokenAddress) {
+  private addTokenNode(tokenAdress: string, parentTokenAddress: string, max: string) {
     if (!parentTokenAddress) parentTokenAddress = null;
-    this.nodes[tokenAdress] = { parent: parentTokenAddress, pools: {} };
+    this.nodes[tokenAdress] = { parent: parentTokenAddress, pools: {}, max };
   }
 
   /**
@@ -90,16 +91,19 @@ export default class Pathfinder {
     let nextTokensToSearch: string[] = [];
     let nextParentTokenAddresses: string[] = [];
 
+    const half = (x: string) => new BigNumber(x).div(2).toString();
+
     for (let i = 0; i < poolsFromToken.length; i++) {
       const poolNode = poolsFromToken[i];
       const t1Address = poolNode.token0.id;
       const t2Address = poolNode.token1.id;
+      const max = t1Address === tokenAddress ? half(poolNode.totalValueLockedToken0) : half(poolNode.totalValueLockedToken1);
 
       if (this.nodes[tokenAddress]) {
         this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
       } else {
         const parent = parentTokenAddresses ? parentTokenAddresses[parentIndex] : null;
-        this.addTokenNode(tokenAddress, parent);
+        this.addTokenNode(tokenAddress, parent, max);
         this.addPoolNode(poolNode, this.nodes[tokenAddress].pools);
       }
 
@@ -113,7 +117,7 @@ export default class Pathfinder {
       // pool with less fees or more liquidity. The path will be the same even if there is another pool at the current
       // search depth, so fees and liquidity are currently being ignored.
       if (t1Address.toLowerCase() === this.userTokenOut.toLowerCase() || t2Address.toLowerCase() === this.userTokenOut.toLowerCase()) {
-        this.addTokenNode(destinationAddress, tokenAddress);
+        this.addTokenNode(destinationAddress, tokenAddress, max);
         this.pathFound = true;
         return null;
       }
@@ -242,7 +246,7 @@ export default class Pathfinder {
         if (!this.userTokenOut) this.userTokenOut = destinationAddress;
 
         if (tokenAddress === destinationAddress) {
-          return resolve([[tokenAddress], this.totalAPIRequest]);
+          return resolve([[tokenAddress], [], this.totalAPIRequest]);
         }
 
         if (this.totalAPIRequest === 999) {
@@ -252,15 +256,10 @@ export default class Pathfinder {
         await this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress });
 
         if (this.nodes[destinationAddress]) {
-          const path = this.constructPath({ destination: this.userTokenOut });
-          if (path) {
-            this.allPaths.push(path);
-          }
+          const [path, amts] = this.constructPath({ destination: this.userTokenOut });
+          console.log("Total API requests: ", this.totalAPIRequest);
+          return resolve([path, amts, this.totalAPIRequest]);
         }
-
-        const path = await this.resolveAllPaths();
-        console.log("Total API requests: ", this.totalAPIRequest);
-        return resolve([path, this.totalAPIRequest]);
       } catch (error) {
         return resolve(basResponse);
       }
@@ -281,46 +280,35 @@ export default class Pathfinder {
       if (path) {
         parent = this.nodes[path[0]].parent;
       } else {
+        const { parent: next, max } = this.nodes[destination];
         path = [destination];
-        parent = this.nodes[destination].parent;
+        parent = next;
       }
 
       if (parent) {
         path.unshift(parent);
         this.constructPath({ path });
       }
-      return path;
+
+      const amts = path.map((address) => this.nodes[address].max);
+      return [path, amts];
     } catch (error) {
       console.error(error);
     }
   }
-
-  private async resolveAllPaths() {
-    let shortestPath: string[];
-    const allPathsResolved = await Promise.allSettled(this.allPaths);
-    allPathsResolved.forEach((promise) => {
-      if (promise.status === "fulfilled") {
-        const path = promise.value;
-        if (!shortestPath || shortestPath.length > path.length) {
-          shortestPath = path;
-        }
-      }
-    });
-    return shortestPath;
-  }
 }
 
-// const pathfinder = new Pathfinder("137", 15);
-// pathfinder
-//   .getTokenPath({
-//     tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
-//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//   })
-//   .then((r) => console.log("response", r))
-//   .catch(console.error);
+const pathfinder = new Pathfinder("137", 15000);
+pathfinder
+  .getTokenPath({
+    tokenAddress: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+  })
+  .then((r) => console.log("response", r))
+  .catch(console.error);
 
-//console.log("Response from search data: ", nextTokensToSearch);
-//three things need to happen at this point if the destination address was not found
+// console.log("Response from search data: ", nextTokensToSearch);
+// three things need to happen at this point if the destination address was not found
 
 // //1. if there are more pools for the token then more data needs to be fetched and searched.
 // if (nextTokensToSearch && (t0MatchLength === 1000 || t1MatchLength === 1000)) {

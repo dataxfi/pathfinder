@@ -15,11 +15,11 @@ export type ITokenInfoList = {
 };
 
 export interface IPathStorage {
-  [tokenAddress: string]: string[];
+  [tokenAddress: string]: { path: string[]; amts: string[] };
 }
 
-export type address = string
-export type chainId = string
+export type address = string;
+export type chainId = string;
 export interface IReFetch {
-  [key:chainId]: address[];
+  [key: chainId]: address[];
 }

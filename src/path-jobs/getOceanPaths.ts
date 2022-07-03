@@ -66,19 +66,28 @@ async function getTokenPaths(chains: supportedChains[]) {
           fs.writeFileSync(`storage/getOceanPaths.ts`, JSON.stringify(reFetch));
         };
 
+        const addItem = (key: string, value: any) => {
+          existingPathFromOcean[key] = value;
+          existingPathsToOcean[key] = value;
+        };
+
+        addItem("listCount", list.length);
+
         for (const token of list) {
           tokenCount++;
           const tokenAddress = token.address;
           const destinationAddress = oceanAddresses[chain];
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-          const [path, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
+          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress });
           if (totalAPIRequest === 999) {
             // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
             writeToReFetch(path);
-          } else if (Array.isArray(path)) {
-            existingPathsToOcean[tokenAddress] = path;
-            existingPathFromOcean[tokenAddress] = Array.isArray(path) ? path.reverse() : null;
+          } else if (Array.isArray(path) && Array.isArray(amts)) {
+            addItem("apiRequestCount", totalAPIRequest);
+            addItem("pathCount", Object.keys(existingPathFromOcean).length);
+            existingPathsToOcean[tokenAddress] = { path, amts };
+            existingPathFromOcean[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
