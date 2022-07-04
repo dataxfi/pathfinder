@@ -37,7 +37,13 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
     for (const chain of chains) {
       if (isRefetch) {
         console.log("Refetching tokens with split queries for chain: ", chain);
-        tokenLists[chain] = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON() as unknown as ITokenInfo[];
+        const refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON() as unknown as ITokenInfo[];
+        delete refetchList["type"];
+        delete refetchList["buffer"];
+        if (Object(refetchList).keys().length === 0) {
+          console.log("No tokens to refetch.");
+          return;
+        }
       } else {
         console.log("Getting token list for chain: ", chain);
         const {
@@ -58,7 +64,6 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
       //collect failed addresses
       const reFetch: IReFetch = { [chain]: [] };
 
-
       if (list.length > 0) {
         const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
         const pathToPathsFromOcean = `storage/chain${chain}/pathsFromOcean.json`;
@@ -68,7 +73,8 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
         let tokenCount = 0;
 
         const writeToReFetch = (address) => {
-          reFetch[chain].push({address});
+          console.log("Writing to reFetch: " + address);
+          reFetch[chain].push({ address });
           fs.writeFileSync(`storage/reFetch.json`, JSON.stringify(reFetch));
         };
 
@@ -104,7 +110,6 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
-            console.log("Writing to reFetch: " + path );
             writeToReFetch(path);
           }
         }
@@ -116,6 +121,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
 }
 
 // call getTokenPaths for with ocean address and refetch param
+console.log("getTokenPaths.js called with: ", process.argv);
 let isRefetch = JSON.parse(process.argv[process.argv.length - 1]);
 if (!isRefetch) isRefetch = false;
 getTokenPaths(["137"], oceanAddresses["137"], isRefetch);
