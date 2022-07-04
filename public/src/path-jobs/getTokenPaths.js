@@ -56,7 +56,7 @@ exports.oceanAddresses = {
  */
 function getTokenPaths(chains, destinationAddress, isRefetch) {
     return __awaiter(this, void 0, void 0, function () {
-        var urls, tokenLists, _i, chains_1, chain, refetchList, refetchTokenAmt, tokens, runtime_1, _loop_1, _a, _b, _c, chain, list, error_1;
+        var urls, tokenLists, _i, chains_1, chain, refetchList, refetchTokenAmt, tokens, runtime_1, interval, _loop_1, _a, _b, _c, chain, list, error_1;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -107,8 +107,9 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     _i++;
                     return [3 /*break*/, 2];
                 case 6:
+                    interval = void 0;
                     if (isRefetch) {
-                        setInterval(function () {
+                        interval = setInterval(function () {
                             if (runtime_1 % 30000 === 0) {
                                 console.log("Job has been running for " + runtime_1 / 60000 + "hours");
                             }
@@ -195,7 +196,9 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                 case 9:
                     _a++;
                     return [3 /*break*/, 7];
-                case 10: return [3 /*break*/, 12];
+                case 10:
+                    clearInterval(interval);
+                    return [2 /*return*/];
                 case 11:
                     error_1 = _d.sent();
                     console.error(error_1);

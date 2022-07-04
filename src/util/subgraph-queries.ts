@@ -40,7 +40,7 @@ function splitQueryList(addresses: string[]): string[][] | string[] {
 
   //go through all addresses and create arrays of equal length
   addresses.forEach((address, index) => {
-    if (index && (currentSet.length % 8 === 0 || currentSet.length % splitAmt === 0)) {
+    if (index && (currentSet.length % 2 === 0 || currentSet.length % splitAmt === 0)) {
       finalAddresses.push(currentSet);
       currentSet = [address];
     } else {
