@@ -2,8 +2,9 @@ import axios from "axios";
 import { supportedChains, ITokenInfoList, IPathStorage, IReFetch } from "../@types";
 import { Pathfinder } from "../pathfinder";
 import * as fs from "fs";
+import * as process from "process";
 
-const oceanAddresses = {
+export const oceanAddresses = {
   "1": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
   "4": "0x8967bcf84170c91b0d24d4302c2376283b0b3a07",
   "56": "0xdce07662ca8ebc241316a15b611c89711414dd1a",
@@ -17,7 +18,7 @@ const oceanAddresses = {
  * to find token paths to and from ocean for every token in the list.
  * @param chains
  */
-async function getTokenPaths(chains: supportedChains[]) {
+export async function getTokenPaths(chains: supportedChains[], destinationAddress: string, split: boolean) {
   console.log("Getting token paths for chains:", chains);
   const urls = {
     "137": "https://unpkg.com/quickswap-default-token-list@1.2.26/build/quickswap-default.tokenlist.json",
@@ -72,15 +73,21 @@ async function getTokenPaths(chains: supportedChains[]) {
           existingPathsToOcean[key] = value;
         };
 
+        const removeUnusedData = () => {
+          delete existingPathFromOcean["type"];
+          delete existingPathFromOcean["data"];
+          delete existingPathsToOcean["type"];
+          delete existingPathsToOcean["data"];
+        };
+
         addItem("listCount", list.length);
 
         for (const token of list) {
           tokenCount++;
           const tokenAddress = token.address;
-          const destinationAddress = oceanAddresses[chain];
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split:false });
+          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split: false });
           if (totalAPIRequest === 999) {
             // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
             writeToReFetch(path);
@@ -89,12 +96,11 @@ async function getTokenPaths(chains: supportedChains[]) {
             addItem("pathCount", Object.keys(existingPathFromOcean).length);
             existingPathsToOcean[tokenAddress] = { path, amts };
             existingPathFromOcean[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
-            delete existingPathFromOcean["type"]
-            delete existingPathFromOcean["data"]
+            removeUnusedData();
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
-            console.log("Token " + path + "failed, writing to reFetch")
+            console.log("Token " + path + " failed, writing to reFetch");
             writeToReFetch(path);
           }
         }
@@ -105,4 +111,7 @@ async function getTokenPaths(chains: supportedChains[]) {
   }
 }
 
-getTokenPaths(["137"]).then(() => console.log("All done yo!"));
+// call getTokenPaths for with ocean address and refetch param
+let isRefetch = JSON.parse(process.argv[process.argv.length - 1]);
+if (!isRefetch) isRefetch = false;
+getTokenPaths(["137"], oceanAddresses["137"], isRefetch);

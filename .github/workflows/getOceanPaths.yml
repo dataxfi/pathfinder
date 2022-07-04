@@ -1,6 +1,6 @@
-on: push
-  # schedule:
-  # - cron: "* */6 * * *"
+on: 
+  schedule:
+  - cron: "1 */2 * * *"
 
 jobs:
   build:
@@ -21,7 +21,7 @@ jobs:
           yarn run getOceanPaths
       - name: Commit changes
         run: |
-          git add storage/chain137
+          git add storage
           git config --local user.email "actions@action.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Updating token paths" -a
