@@ -37,15 +37,19 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
     for (const chain of chains) {
       if (isRefetch) {
         console.log("Refetching tokens with split queries for chain: ", chain);
-        const refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON() as unknown as ITokenInfo[];
+        const refetchList = JSON.parse(fs.readFileSync(`storage/chain${chain}/refetch.json`).toString()) as unknown as ITokenInfoList;
+
         delete refetchList["type"];
-        delete refetchList["buffer"];
-        const refetchTokenAmt = Object.keys(refetchList).length
-        if ( refetchTokenAmt=== 0) {
+        delete refetchList["data"];
+
+        const refetchTokenAmt = refetchList[chain].length;
+        console.log(refetchList);
+        if (refetchTokenAmt === 0) {
           console.log("No tokens to refetch.");
           return;
         } else {
-          console.log("Refetch token amount: ", refetchTokenAmt)
+          console.log("Refetch token amount: ", refetchTokenAmt);
+          tokenLists[chain] = refetchList[chain];
         }
       } else {
         console.log("Getting token list for chain: ", chain);
@@ -59,6 +63,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
     }
 
     for (let [chain, list] of Object.entries(tokenLists)) {
+      console.log("On chain" + chain + ", list:", list);
       // max time for a github job is 6 hours, so limit the query time by list length
       // using 20000 instead of 21600 to allow time for pre/post actions
       const maxQueryTime = (20000 / list.length) * 1000;
@@ -125,6 +130,6 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
 
 // call getTokenPaths for with ocean address and refetch param
 console.log("getTokenPaths.js called with: ", process.argv);
-let isRefetch = JSON.parse(process.argv[process.argv.length - 1]);
-if (!isRefetch) isRefetch = false;
+let isRefetch;
+if (process.argv.length === 3) isRefetch = true;
 getTokenPaths(["137"], oceanAddresses["137"], isRefetch);

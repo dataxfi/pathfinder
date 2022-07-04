@@ -82,16 +82,18 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     chain = chains_1[_i];
                     if (!isRefetch) return [3 /*break*/, 3];
                     console.log("Refetching tokens with split queries for chain: ", chain);
-                    refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON();
+                    refetchList = JSON.parse(fs.readFileSync("storage/chain".concat(chain, "/refetch.json")).toString());
                     delete refetchList["type"];
-                    delete refetchList["buffer"];
-                    refetchTokenAmt = Object.keys(refetchList).length;
+                    delete refetchList["data"];
+                    refetchTokenAmt = refetchList[chain].length;
+                    console.log(refetchList);
                     if (refetchTokenAmt === 0) {
                         console.log("No tokens to refetch.");
                         return [2 /*return*/];
                     }
                     else {
                         console.log("Refetch token amount: ", refetchTokenAmt);
+                        tokenLists[chain] = refetchList[chain];
                     }
                     return [3 /*break*/, 5];
                 case 3:
@@ -112,6 +114,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                         return __generator(this, function (_h) {
                             switch (_h.label) {
                                 case 0:
+                                    console.log("On chain" + chain + ", list:", list);
                                     maxQueryTime = (20000 / list.length) * 1000;
                                     console.log("Max query time for each token: ", maxQueryTime);
                                     reFetch = (_g = {}, _g[chain] = [], _g);
@@ -198,8 +201,8 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
 exports.getTokenPaths = getTokenPaths;
 // call getTokenPaths for with ocean address and refetch param
 console.log("getTokenPaths.js called with: ", process.argv);
-var isRefetch = JSON.parse(process.argv[process.argv.length - 1]);
-if (!isRefetch)
-    isRefetch = false;
+var isRefetch;
+if (process.argv.length === 3)
+    isRefetch = true;
 getTokenPaths(["137"], exports.oceanAddresses["137"], isRefetch);
 //# sourceMappingURL=getTokenPaths.js.map
