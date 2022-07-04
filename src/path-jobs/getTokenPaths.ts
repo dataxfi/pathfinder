@@ -61,11 +61,23 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
       }
     }
 
+    let runtime;
+    if (isRefetch) {
+      setInterval(() => {
+        if (runtime % 30000 === 0) {
+          console.log("Job has been running for " + runtime / 60000 + "hours");
+        }
+
+        runtime += 60000;
+      }, 60000);
+    }
+
     for (let [chain, list] of Object.entries(tokenLists)) {
       console.log("On chain" + chain + ", list:", list);
       // max time for a github job is 6 hours, so limit the query time by list length
+      // if this is a refetch run, limit the total job runtime instead of each query
       // using 20000 instead of 21600 to allow time for pre/post actions
-      const maxQueryTime = (20000 / list.length) * 1000;
+      const maxQueryTime = isRefetch ? 18000000 : (20000 / list.length) * 1000;
       console.log("Max query time for each token: ", maxQueryTime);
 
       //collect failed addresses
@@ -104,7 +116,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
           const tokenAddress = token.address;
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split: false });
+          const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split: false, runtime });
           if (totalAPIRequest === 999) {
             // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
             writeToReFetch(path);

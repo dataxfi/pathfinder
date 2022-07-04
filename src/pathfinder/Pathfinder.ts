@@ -165,7 +165,7 @@ export default class Pathfinder {
     const [allTokensResponse, apiRequestCount] = await this.fetchFunction(tokenAddresses, this.split, skipT0, skipT1, callT0, callT1);
 
     this.totalAPIRequest = apiRequestCount - 1;
-    
+
     for (let i = 0; i < allTokensResponse.length; i++) {
       const response = allTokensResponse[i];
       if (response && response.allMatchedPools.length > 0) {
@@ -218,11 +218,13 @@ export default class Pathfinder {
     destinationAddress,
     split = false,
     abortSignal,
+    runtime,
   }: {
     tokenAddress: string;
     destinationAddress: string;
     split: boolean;
     abortSignal?: AbortSignal;
+    runtime?: number;
   }): Promise<pathfinderResponse> {
     const timeout: Promise<[string, number]> = new Promise((res, rej) => {
       setTimeout(res, this.maxQueryTime, [tokenAddress, this.totalAPIRequest]);
@@ -253,6 +255,10 @@ export default class Pathfinder {
         }
 
         if (this.totalAPIRequest === 999) {
+          return resolve(badResponse);
+        }
+
+        if (runtime > 198000000) {
           return resolve(badResponse);
         }
 
@@ -301,15 +307,15 @@ export default class Pathfinder {
   }
 }
 
-const pathfinder = new Pathfinder("137", 1500000000);
-pathfinder
-  .getTokenPath({
-    tokenAddress: "0x56A0eFEFC9F1FBb54FBd25629Ac2aA764F1b56F7",
-    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-    split: true,
-  })
-  .then((r) => console.log("response", r))
-  .catch(console.error);
+// const pathfinder = new Pathfinder("137", 1500000000);
+// pathfinder
+//   .getTokenPath({
+//     tokenAddress: "0x56A0eFEFC9F1FBb54FBd25629Ac2aA764F1b56F7",
+//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+//     split: true,
+//   })
+//   .then((r) => console.log("response", r))
+//   .catch(console.error);
 
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
