@@ -284,6 +284,7 @@ var Pathfinder = /** @class */ (function () {
                                 return [3 /*break*/, 4];
                             case 3:
                                 error_1 = _b.sent();
+                                console.log(error_1);
                                 return [2 /*return*/, resolve(badResponse)];
                             case 4: return [2 /*return*/];
                         }
@@ -301,39 +302,34 @@ var Pathfinder = /** @class */ (function () {
     Pathfinder.prototype.constructPath = function (_a) {
         var _this = this;
         var path = _a.path, destination = _a.destination;
-        try {
-            var parent_2;
-            if (path) {
-                parent_2 = this.nodes[path[0]].parent;
-            }
-            else {
-                var _b = this.nodes[destination], next = _b.parent, max = _b.max;
-                path = [destination];
-                parent_2 = next;
-            }
-            if (parent_2) {
-                path.unshift(parent_2);
-                this.constructPath({ path: path });
-            }
-            var amts = path.map(function (address) { return _this.nodes[address].max; });
-            return [path, amts];
+        var parent;
+        if (path) {
+            parent = this.nodes[path[0]].parent;
         }
-        catch (error) {
-            console.error(error);
+        else {
+            var _b = this.nodes[destination], next = _b.parent, max = _b.max;
+            path = [destination];
+            parent = next;
         }
+        if (parent) {
+            path.unshift(parent);
+            this.constructPath({ path: path });
+        }
+        var amts = path.map(function (address) { return _this.nodes[address].max; });
+        return [path, amts];
     };
     return Pathfinder;
 }());
 exports.default = Pathfinder;
-// const pathfinder = new Pathfinder("137", 1500000000);
-// pathfinder
-//   .getTokenPath({
-//     tokenAddress: "0x56A0eFEFC9F1FBb54FBd25629Ac2aA764F1b56F7",
-//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//     split: true,
-//   })
-//   .then((r) => console.log("response", r))
-//   .catch(console.error);
+var pathfinder = new Pathfinder("137", 1500000000);
+pathfinder
+    .getTokenPath({
+    tokenAddress: "0x56A0eFEFC9F1FBb54FBd25629Ac2aA764F1b56F7",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+    split: true,
+})
+    .then(function (r) { return console.log("response", r); })
+    .catch(console.error);
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
 // //1. if there are more pools for the token then more data needs to be fetched and searched.

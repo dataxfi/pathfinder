@@ -62,8 +62,9 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
     }
 
     let runtime;
+    let interval;
     if (isRefetch) {
-      setInterval(() => {
+      interval = setInterval(() => {
         if (runtime % 30000 === 0) {
           console.log("Job has been running for " + runtime / 60000 + "hours");
         }
@@ -134,6 +135,9 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
         }
       }
     }
+
+    clearInterval(interval);
+    return;
   } catch (error) {
     console.error(error);
   }
