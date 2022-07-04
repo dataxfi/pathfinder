@@ -87,6 +87,7 @@ function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
                     response = _a.sent();
                     checkFailed(response);
                     allData = __assign(__assign({}, allData), response.data.data);
+                    console.log("Response received.");
                     _a.label = 3;
                 case 3:
                     _i++;

@@ -136,12 +136,11 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
       }
     }
 
-    // clearInterval(interval);
+    clearInterval(interval);
     return;
   } catch (error) {
     console.error(error);
   }
-  console.log("Almost done")
 }
 
 // call getTokenPaths for with ocean address and refetch param

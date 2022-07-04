@@ -196,16 +196,14 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                 case 9:
                     _a++;
                     return [3 /*break*/, 7];
-                case 10: 
-                // clearInterval(interval);
-                return [2 /*return*/];
+                case 10:
+                    clearInterval(interval);
+                    return [2 /*return*/];
                 case 11:
                     error_1 = _d.sent();
                     console.error(error_1);
                     return [3 /*break*/, 12];
-                case 12:
-                    console.log("Almost done");
-                    return [2 /*return*/];
+                case 12: return [2 /*return*/];
             }
         });
     });
