@@ -270,6 +270,7 @@ export default class Pathfinder {
           return resolve([path, amts, this.totalAPIRequest]);
         }
       } catch (error) {
+        console.log(error);
         return resolve(badResponse);
       }
     });
@@ -283,27 +284,23 @@ export default class Pathfinder {
    * @returns path as a string[]
    */
   private constructPath({ path, destination }: { path?: string[]; destination?: string }) {
-    try {
-      let parent: string;
+    let parent: string;
 
-      if (path) {
-        parent = this.nodes[path[0]].parent;
-      } else {
-        const { parent: next, max } = this.nodes[destination];
-        path = [destination];
-        parent = next;
-      }
-
-      if (parent) {
-        path.unshift(parent);
-        this.constructPath({ path });
-      }
-
-      const amts = path.map((address) => this.nodes[address].max);
-      return [path, amts];
-    } catch (error) {
-      console.error(error);
+    if (path) {
+      parent = this.nodes[path[0]].parent;
+    } else {
+      const { parent: next, max } = this.nodes[destination];
+      path = [destination];
+      parent = next;
     }
+
+    if (parent) {
+      path.unshift(parent);
+      this.constructPath({ path });
+    }
+
+    const amts = path.map((address) => this.nodes[address].max);
+    return [path, amts];
   }
 }
 
