@@ -54,7 +54,7 @@ exports.oceanAddresses = {
  * to find token paths to and from ocean for every token in the list.
  * @param chains
  */
-function getTokenPaths(chains, destinationAddress, split) {
+function getTokenPaths(chains, destinationAddress, isRefetch) {
     return __awaiter(this, void 0, void 0, function () {
         var urls, tokenLists, _i, chains_1, chain, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
         return __generator(this, function (_d) {
@@ -74,23 +74,28 @@ function getTokenPaths(chains, destinationAddress, split) {
                     };
                     _d.label = 1;
                 case 1:
-                    _d.trys.push([1, 10, , 11]);
+                    _d.trys.push([1, 11, , 12]);
                     _i = 0, chains_1 = chains;
                     _d.label = 2;
                 case 2:
-                    if (!(_i < chains_1.length)) return [3 /*break*/, 5];
+                    if (!(_i < chains_1.length)) return [3 /*break*/, 6];
                     chain = chains_1[_i];
+                    if (!isRefetch) return [3 /*break*/, 3];
+                    console.log("Refetching tokens with split queries for chain: ", chain);
+                    tokenLists[chain] = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON();
+                    return [3 /*break*/, 5];
+                case 3:
                     console.log("Getting token list for chain: ", chain);
                     return [4 /*yield*/, axios_1.default.get(urls[chain])];
-                case 3:
+                case 4:
                     tokens = (_d.sent()).data.tokens;
                     tokenLists[chain] = tokens;
                     console.log("Token amount on chain:", tokens.length);
-                    _d.label = 4;
-                case 4:
+                    _d.label = 5;
+                case 5:
                     _i++;
                     return [3 /*break*/, 2];
-                case 5:
+                case 6:
                     _loop_1 = function (chain, list) {
                         var maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean_1, existingPathsToOcean_1, tokenCount, writeToReFetch, addItem, removeUnusedData, _e, list_1, token, tokenAddress, _f, path, amts, totalAPIRequest;
                         var _g;
@@ -108,7 +113,7 @@ function getTokenPaths(chains, destinationAddress, split) {
                                     existingPathsToOcean_1 = fs.readFileSync(pathToPathsToOcean).toJSON();
                                     tokenCount = 0;
                                     writeToReFetch = function (address) {
-                                        reFetch[chain].push(address);
+                                        reFetch[chain].push({ address: address });
                                         fs.writeFileSync("storage/reFetch.json", JSON.stringify(reFetch));
                                     };
                                     addItem = function (key, value) {
@@ -159,23 +164,23 @@ function getTokenPaths(chains, destinationAddress, split) {
                         });
                     };
                     _a = 0, _b = Object.entries(tokenLists);
-                    _d.label = 6;
-                case 6:
-                    if (!(_a < _b.length)) return [3 /*break*/, 9];
+                    _d.label = 7;
+                case 7:
+                    if (!(_a < _b.length)) return [3 /*break*/, 10];
                     _c = _b[_a], chain = _c[0], list = _c[1];
                     return [5 /*yield**/, _loop_1(chain, list)];
-                case 7:
-                    _d.sent();
-                    _d.label = 8;
                 case 8:
+                    _d.sent();
+                    _d.label = 9;
+                case 9:
                     _a++;
-                    return [3 /*break*/, 6];
-                case 9: return [3 /*break*/, 11];
-                case 10:
+                    return [3 /*break*/, 7];
+                case 10: return [3 /*break*/, 12];
+                case 11:
                     error_1 = _d.sent();
                     console.error(error_1);
-                    return [3 /*break*/, 11];
-                case 11: return [2 /*return*/];
+                    return [3 /*break*/, 12];
+                case 12: return [2 /*return*/];
             }
         });
     });
