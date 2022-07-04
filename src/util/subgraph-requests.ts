@@ -8,7 +8,7 @@ import { uniswapV2Query, uniswapV3Query } from "./subgraph-queries";
  * @param address
  * @param amt - token amount to be swapped. Pools with less than are excluded
  */
-export async function uniswapV2Req(url: string, split: boolean, addresses: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) {
+export async function uniswapV2Req(url: string, split: boolean, addresses: string[], skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]): Promise<[requestResponse[], number]> {
   const request = (query) =>
     axios.post(
       url,
@@ -22,22 +22,25 @@ export async function uniswapV2Req(url: string, split: boolean, addresses: strin
   const checkFailed = (response) => {
     if (response.data?.errors) throw new Error("Failed to call subgraph");
   };
+  let apiRequestCount = 0;
 
   const queries = uniswapV2Query(addresses, split, skipT0, skipT1, callT0, callT1);
   if (split && Array.isArray(queries)) {
     for (const query of queries) {
+      apiRequestCount++;
       const response = await request(query);
       checkFailed(response);
       allData = { ...allData, ...response.data.data };
-      console.log("Response returned")
+      console.log("Response returned");
     }
   } else {
+    apiRequestCount++;
     const response = await request(queries);
     checkFailed(response);
     allData = response.data.data;
   }
 
-  return formatter(allData, addresses);
+  return [formatter(allData, addresses), apiRequestCount];
 }
 
 /**

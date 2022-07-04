@@ -38,7 +38,7 @@ export interface requestResponse {
   allMatchedPools: IPoolNode[];
 }
 
-export type queryFunction = (address: string[], split: boolean, skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) => Promise<requestResponse[]>;
+export type queryFunction = (address: string[], split: boolean, skipT0: number[], skipT1: number[], callT0: boolean[], callT1: boolean[]) => Promise<[requestResponse[], number]>;
 export type supportedChains = "1" | "4" | "56" | "137" | "246" | "1285";
 export type succesfulResponse = [string[], string[], number];
 export type failedResponse = [string, number];

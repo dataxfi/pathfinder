@@ -2,7 +2,7 @@ import Web3 from "web3";
 import { failedResponse, IPoolGraph, IPoolNode, ITokenGraph, pathfinderResponse, queryFunction, queryParams, supportedChains } from "../@types";
 import { mainnetPools, maticPools } from "../util";
 import BigNumber from "bignumber.js";
-BigNumber.config({DECIMAL_PLACES: 50})
+BigNumber.config({ DECIMAL_PLACES: 50 });
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
 export default class Pathfinder {
@@ -162,7 +162,10 @@ export default class Pathfinder {
 
     let { skipT0, skipT1, callT0, callT1 } = queryParams;
     this.totalAPIRequest++;
-    const allTokensResponse = await this.fetchFunction(tokenAddresses, this.split, skipT0, skipT1, callT0, callT1);
+    const [allTokensResponse, apiRequestCount] = await this.fetchFunction(tokenAddresses, this.split, skipT0, skipT1, callT0, callT1);
+
+    this.totalAPIRequest = apiRequestCount - 1;
+    
     for (let i = 0; i < allTokensResponse.length; i++) {
       const response = allTokensResponse[i];
       if (response && response.allMatchedPools.length > 0) {
