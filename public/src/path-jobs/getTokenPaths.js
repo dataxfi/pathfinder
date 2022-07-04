@@ -56,7 +56,7 @@ exports.oceanAddresses = {
  */
 function getTokenPaths(chains, destinationAddress, isRefetch) {
     return __awaiter(this, void 0, void 0, function () {
-        var urls, tokenLists, _i, chains_1, chain, refetchList, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
+        var urls, tokenLists, _i, chains_1, chain, refetchList, refetchTokenAmt, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -85,9 +85,13 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON();
                     delete refetchList["type"];
                     delete refetchList["buffer"];
-                    if (Object(refetchList).keys().length === 0) {
+                    refetchTokenAmt = Object.keys(refetchList).length;
+                    if (refetchTokenAmt === 0) {
                         console.log("No tokens to refetch.");
                         return [2 /*return*/];
+                    }
+                    else {
+                        console.log("Refetch token amount: ", refetchTokenAmt);
                     }
                     return [3 /*break*/, 5];
                 case 3:
