@@ -104,7 +104,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
           } else {
-            console.log("Token " + path + " failed, writing to reFetch");
+            console.log("Writing to reFetch: " + path );
             writeToReFetch(path);
           }
         }

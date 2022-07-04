@@ -27,17 +27,35 @@ function v2GeneralReq(address: string, callT0: boolean, callT1: boolean) {
 
 function splitQueryList(addresses: string[]): string[][] | string[] {
   const finalAddresses = [];
+  let oddAddress;
 
+  //for lists with an odd length, pop one address
+  if (addresses.length % 2 !== 0) {
+    oddAddress = addresses.pop();
+  }
+
+  //split the queries in half
   let splitAmt = addresses.length / 2;
   let currentSet = [];
 
+  //go through all addresses and create arrays of equal length
   addresses.forEach((address, index) => {
-    currentSet.push[address];
-    if (index % splitAmt === 0) {
+    if (index && (currentSet.length % 20 === 0 || currentSet.length % splitAmt === 0)) {
       finalAddresses.push(currentSet);
-      currentSet = [];
+      currentSet = [address];
+    } else {
+      currentSet.push(address);
+    }
+
+    if (index === addresses.length - 1) {
+      finalAddresses.push(currentSet);
     }
   });
+
+  //push the odd address to an array containing it alone
+  if (oddAddress) {
+    finalAddresses.push([oddAddress]);
+  }
 
   return finalAddresses;
 }
@@ -65,7 +83,7 @@ function buildQueries(version: 3 | 2, addresses: string[][] | string[], callT0: 
 export function uniswapV2Query(addresses: string[], split: boolean, skipT0: number[] = [0], skipT1: number[] = [0], callT0: boolean[] = [true], callT1: boolean[] = [true]) {
   // ${skipT0[index]}${skipT1[index]}
 
-  const listToUse = split ? splitQueryList(addresses) : addresses;
+  const listToUse = split && addresses.length > 1 ? splitQueryList(addresses) : addresses;
   const queries = buildQueries(2, listToUse, callT0, callT1);
 
   if (Array.isArray(queries[0])) {

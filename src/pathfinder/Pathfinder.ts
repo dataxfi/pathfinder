@@ -225,7 +225,7 @@ export default class Pathfinder {
       setTimeout(res, this.maxQueryTime, [tokenAddress, this.totalAPIRequest]);
     });
 
-    const basResponse: failedResponse = [tokenAddress, this.totalAPIRequest];
+    const badResponse: failedResponse = [tokenAddress, this.totalAPIRequest];
     const path: Promise<pathfinderResponse> = new Promise(async (resolve, reject) => {
       abortSignal?.addEventListener("abort", () => {
         return reject(new Error("Aborted"));
@@ -250,7 +250,7 @@ export default class Pathfinder {
         }
 
         if (this.totalAPIRequest === 999) {
-          resolve(basResponse);
+          return resolve(badResponse);
         }
 
         await this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress });
@@ -261,7 +261,7 @@ export default class Pathfinder {
           return resolve([path, amts, this.totalAPIRequest]);
         }
       } catch (error) {
-        return resolve(basResponse);
+        return resolve(badResponse);
       }
     });
 
@@ -298,7 +298,15 @@ export default class Pathfinder {
   }
 }
 
-
+const pathfinder = new Pathfinder("137", 1500000000);
+pathfinder
+  .getTokenPath({
+    tokenAddress: "0x9Bd9aD490dD3a52f096D229af4483b94D63BE618",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+    split: true,
+  })
+  .then((r) => console.log("response", r))
+  .catch(console.error);
 
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found

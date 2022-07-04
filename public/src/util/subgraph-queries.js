@@ -9,15 +9,31 @@ function v2GeneralReq(address, callT0, callT1) {
 }
 function splitQueryList(addresses) {
     var finalAddresses = [];
+    var oddAddress;
+    //for lists with an odd length, pop one address
+    if (addresses.length % 2 !== 0) {
+        oddAddress = addresses.pop();
+    }
+    //split the queries in half
     var splitAmt = addresses.length / 2;
     var currentSet = [];
+    //go through all addresses and create arrays of equal length
     addresses.forEach(function (address, index) {
-        currentSet.push[address];
-        if (index % splitAmt === 0) {
+        if (index && (currentSet.length % 20 === 0 || currentSet.length % splitAmt === 0)) {
             finalAddresses.push(currentSet);
-            currentSet = [];
+            currentSet = [address];
+        }
+        else {
+            currentSet.push(address);
+        }
+        if (index === addresses.length - 1) {
+            finalAddresses.push(currentSet);
         }
     });
+    //push the odd address to an array containing it alone
+    if (oddAddress) {
+        finalAddresses.push([oddAddress]);
+    }
     return finalAddresses;
 }
 function buildQueries(version, addresses, callT0, callT1) {
@@ -45,7 +61,7 @@ function uniswapV2Query(addresses, split, skipT0, skipT1, callT0, callT1) {
     if (skipT1 === void 0) { skipT1 = [0]; }
     if (callT0 === void 0) { callT0 = [true]; }
     if (callT1 === void 0) { callT1 = [true]; }
-    var listToUse = split ? splitQueryList(addresses) : addresses;
+    var listToUse = split && addresses.length > 1 ? splitQueryList(addresses) : addresses;
     var queries = buildQueries(2, listToUse, callT0, callT1);
     if (Array.isArray(queries[0])) {
         return queries.map(function (querySet) { return "query {\n      ".concat(querySet.join("\n"), "\n    }"); });

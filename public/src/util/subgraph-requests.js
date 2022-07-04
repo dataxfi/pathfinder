@@ -74,8 +74,7 @@ function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
                             throw new Error("Failed to call subgraph");
                     };
                     queries = (0, subgraph_queries_1.uniswapV2Query)(addresses, split, skipT0, skipT1, callT0, callT1);
-                    if (!split) return [3 /*break*/, 5];
-                    if (!Array.isArray(queries)) return [3 /*break*/, 4];
+                    if (!(split && Array.isArray(queries))) return [3 /*break*/, 5];
                     _i = 0, queries_1 = queries;
                     _a.label = 1;
                 case 1:
@@ -86,6 +85,7 @@ function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
                     response = _a.sent();
                     checkFailed(response);
                     allData = __assign(__assign({}, allData), response.data.data);
+                    console.log("Response returned");
                     _a.label = 3;
                 case 3:
                     _i++;

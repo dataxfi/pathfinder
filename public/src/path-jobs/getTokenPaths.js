@@ -152,7 +152,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));
                                     }
                                     else {
-                                        console.log("Token " + path + " failed, writing to reFetch");
+                                        console.log("Writing to reFetch: " + path);
                                         writeToReFetch(path);
                                     }
                                     _h.label = 3;

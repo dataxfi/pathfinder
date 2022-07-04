@@ -235,13 +235,13 @@ var Pathfinder = /** @class */ (function () {
     Pathfinder.prototype.getTokenPath = function (_a) {
         var tokenAddress = _a.tokenAddress, destinationAddress = _a.destinationAddress, _b = _a.split, split = _b === void 0 ? false : _b, abortSignal = _a.abortSignal;
         return __awaiter(this, void 0, void 0, function () {
-            var timeout, basResponse, path;
+            var timeout, badResponse, path;
             var _this = this;
             return __generator(this, function (_c) {
                 timeout = new Promise(function (res, rej) {
                     setTimeout(res, _this.maxQueryTime, [tokenAddress, _this.totalAPIRequest]);
                 });
-                basResponse = [tokenAddress, this.totalAPIRequest];
+                badResponse = [tokenAddress, this.totalAPIRequest];
                 path = new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
                     var _a, path_1, amts, error_1;
                     return __generator(this, function (_b) {
@@ -267,7 +267,7 @@ var Pathfinder = /** @class */ (function () {
                                     return [2 /*return*/, resolve([[tokenAddress], [], this.totalAPIRequest])];
                                 }
                                 if (this.totalAPIRequest === 999) {
-                                    resolve(basResponse);
+                                    return [2 /*return*/, resolve(badResponse)];
                                 }
                                 return [4 /*yield*/, this.getPoolData({ tokenAddresses: [tokenAddress], destinationAddress: destinationAddress })];
                             case 2:
@@ -280,7 +280,7 @@ var Pathfinder = /** @class */ (function () {
                                 return [3 /*break*/, 4];
                             case 3:
                                 error_1 = _b.sent();
-                                return [2 /*return*/, resolve(basResponse)];
+                                return [2 /*return*/, resolve(badResponse)];
                             case 4: return [2 /*return*/];
                         }
                     });
@@ -321,6 +321,15 @@ var Pathfinder = /** @class */ (function () {
     return Pathfinder;
 }());
 exports.default = Pathfinder;
+var pathfinder = new Pathfinder("137", 1500000000);
+pathfinder
+    .getTokenPath({
+    tokenAddress: "0x9Bd9aD490dD3a52f096D229af4483b94D63BE618",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+    split: true,
+})
+    .then(function (r) { return console.log("response", r); })
+    .catch(console.error);
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
 // //1. if there are more pools for the token then more data needs to be fetched and searched.
