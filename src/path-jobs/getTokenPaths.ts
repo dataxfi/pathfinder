@@ -136,15 +136,16 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
       }
     }
 
-    clearInterval(interval);
+    // clearInterval(interval);
     return;
   } catch (error) {
     console.error(error);
   }
+  console.log("Almost done")
 }
 
 // call getTokenPaths for with ocean address and refetch param
 console.log("getTokenPaths.js called with: ", process.argv);
 let isRefetch;
 if (process.argv.length === 3) isRefetch = true;
-getTokenPaths(["137"], oceanAddresses["137"], isRefetch);
+getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(()=>{console.log("Done")});

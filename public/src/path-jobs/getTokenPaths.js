@@ -196,14 +196,16 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                 case 9:
                     _a++;
                     return [3 /*break*/, 7];
-                case 10:
-                    clearInterval(interval);
-                    return [2 /*return*/];
+                case 10: 
+                // clearInterval(interval);
+                return [2 /*return*/];
                 case 11:
                     error_1 = _d.sent();
                     console.error(error_1);
                     return [3 /*break*/, 12];
-                case 12: return [2 /*return*/];
+                case 12:
+                    console.log("Almost done");
+                    return [2 /*return*/];
             }
         });
     });
@@ -214,5 +216,5 @@ console.log("getTokenPaths.js called with: ", process.argv);
 var isRefetch;
 if (process.argv.length === 3)
     isRefetch = true;
-getTokenPaths(["137"], exports.oceanAddresses["137"], isRefetch);
+getTokenPaths(["137"], exports.oceanAddresses["137"], isRefetch).then(function () { console.log("Done"); });
 //# sourceMappingURL=getTokenPaths.js.map
