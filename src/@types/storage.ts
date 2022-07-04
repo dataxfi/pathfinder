@@ -21,5 +21,5 @@ export interface IPathStorage {
 export type address = string;
 export type chainId = string;
 export interface IReFetch {
-  [key: chainId]: address[];
+  [key: chainId]: { address: address }[];
 }

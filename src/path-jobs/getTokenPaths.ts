@@ -1,5 +1,5 @@
 import axios from "axios";
-import { supportedChains, ITokenInfoList, IPathStorage, IReFetch } from "../@types";
+import { supportedChains, ITokenInfoList, IReFetch, ITokenInfo } from "../@types";
 import { Pathfinder } from "../pathfinder";
 import * as fs from "fs";
 import * as process from "process";
@@ -18,7 +18,7 @@ export const oceanAddresses = {
  * to find token paths to and from ocean for every token in the list.
  * @param chains
  */
-export async function getTokenPaths(chains: supportedChains[], destinationAddress: string, split: boolean) {
+export async function getTokenPaths(chains: supportedChains[], destinationAddress: string, isRefetch: boolean) {
   console.log("Getting token paths for chains:", chains);
   const urls = {
     "137": "https://unpkg.com/quickswap-default-token-list@1.2.26/build/quickswap-default.tokenlist.json",
@@ -35,13 +35,18 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
 
   try {
     for (const chain of chains) {
-      console.log("Getting token list for chain: ", chain);
-      const {
-        data: { tokens },
-      } = await axios.get(urls[chain]);
+      if (isRefetch) {
+        console.log("Refetching tokens with split queries for chain: ", chain);
+        tokenLists[chain] = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON() as unknown as ITokenInfo[];
+      } else {
+        console.log("Getting token list for chain: ", chain);
+        const {
+          data: { tokens },
+        } = await axios.get(urls[chain]);
 
-      tokenLists[chain] = tokens;
-      console.log("Token amount on chain:", tokens.length);
+        tokenLists[chain] = tokens;
+        console.log("Token amount on chain:", tokens.length);
+      }
     }
 
     for (let [chain, list] of Object.entries(tokenLists)) {
@@ -53,7 +58,6 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
       //collect failed addresses
       const reFetch: IReFetch = { [chain]: [] };
 
-      //TODO: run a second job for the path for failed tokens
 
       if (list.length > 0) {
         const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
@@ -64,7 +68,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
         let tokenCount = 0;
 
         const writeToReFetch = (address) => {
-          reFetch[chain].push(address);
+          reFetch[chain].push({address});
           fs.writeFileSync(`storage/reFetch.json`, JSON.stringify(reFetch));
         };
 
