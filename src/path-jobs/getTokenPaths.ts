@@ -41,9 +41,8 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
 
         delete refetchList["type"];
         delete refetchList["data"];
-
         const refetchTokenAmt = refetchList[chain].length;
-        console.log(refetchList);
+
         if (refetchTokenAmt === 0) {
           console.log("No tokens to refetch.");
           return;

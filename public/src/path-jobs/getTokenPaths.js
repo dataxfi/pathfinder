@@ -86,7 +86,6 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     delete refetchList["type"];
                     delete refetchList["data"];
                     refetchTokenAmt = refetchList[chain].length;
-                    console.log(refetchList);
                     if (refetchTokenAmt === 0) {
                         console.log("No tokens to refetch.");
                         return [2 /*return*/];

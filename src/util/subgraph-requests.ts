@@ -29,7 +29,7 @@ export async function uniswapV2Req(url: string, split: boolean, addresses: strin
       const response = await request(query);
       checkFailed(response);
       allData = { ...allData, ...response.data.data };
-      // console.log("Response returned")
+      console.log("Response returned")
     }
   } else {
     const response = await request(queries);
