@@ -58,7 +58,7 @@ var subgraph_queries_1 = require("./subgraph-queries");
  */
 function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
     return __awaiter(this, void 0, void 0, function () {
-        var request, allData, checkFailed, queries, _i, queries_1, query, response, response;
+        var request, allData, checkFailed, apiRequestCount, queries, _i, queries_1, query, response, response;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -73,6 +73,7 @@ function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
                         if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.errors)
                             throw new Error("Failed to call subgraph");
                     };
+                    apiRequestCount = 0;
                     queries = (0, subgraph_queries_1.uniswapV2Query)(addresses, split, skipT0, skipT1, callT0, callT1);
                     if (!(split && Array.isArray(queries))) return [3 /*break*/, 5];
                     _i = 0, queries_1 = queries;
@@ -80,24 +81,26 @@ function uniswapV2Req(url, split, addresses, skipT0, skipT1, callT0, callT1) {
                 case 1:
                     if (!(_i < queries_1.length)) return [3 /*break*/, 4];
                     query = queries_1[_i];
+                    apiRequestCount++;
                     return [4 /*yield*/, request(query)];
                 case 2:
                     response = _a.sent();
                     checkFailed(response);
                     allData = __assign(__assign({}, allData), response.data.data);
-                    console.log("Response returned");
                     _a.label = 3;
                 case 3:
                     _i++;
                     return [3 /*break*/, 1];
                 case 4: return [3 /*break*/, 7];
-                case 5: return [4 /*yield*/, request(queries)];
+                case 5:
+                    apiRequestCount++;
+                    return [4 /*yield*/, request(queries)];
                 case 6:
                     response = _a.sent();
                     checkFailed(response);
                     allData = response.data.data;
                     _a.label = 7;
-                case 7: return [2 /*return*/, (0, format_response_1.formatter)(allData, addresses)];
+                case 7: return [2 /*return*/, [(0, format_response_1.formatter)(allData, addresses), apiRequestCount]];
             }
         });
     });

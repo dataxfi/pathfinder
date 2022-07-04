@@ -56,7 +56,7 @@ exports.oceanAddresses = {
  */
 function getTokenPaths(chains, destinationAddress, isRefetch) {
     return __awaiter(this, void 0, void 0, function () {
-        var urls, tokenLists, _i, chains_1, chain, refetchList, refetchTokenAmt, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
+        var urls, tokenLists, _i, chains_1, chain, refetchList, refetchTokenAmt, tokens, runtime_1, _loop_1, _a, _b, _c, chain, list, error_1;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -107,6 +107,14 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     _i++;
                     return [3 /*break*/, 2];
                 case 6:
+                    if (isRefetch) {
+                        setInterval(function () {
+                            if (runtime_1 % 30000 === 0) {
+                                console.log("Job has been running for " + runtime_1 / 60000 + "hours");
+                            }
+                            runtime_1 += 60000;
+                        }, 60000);
+                    }
                     _loop_1 = function (chain, list) {
                         var maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean_1, existingPathsToOcean_1, tokenCount, writeToReFetch, addItem, removeUnusedData, _e, list_1, token, tokenAddress, _f, path, amts, totalAPIRequest;
                         var _g;
@@ -114,7 +122,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                             switch (_h.label) {
                                 case 0:
                                     console.log("On chain" + chain + ", list:", list);
-                                    maxQueryTime = (20000 / list.length) * 1000;
+                                    maxQueryTime = isRefetch ? 18000000 : (20000 / list.length) * 1000;
                                     console.log("Max query time for each token: ", maxQueryTime);
                                     reFetch = (_g = {}, _g[chain] = [], _g);
                                     if (!(list.length > 0)) return [3 /*break*/, 4];
@@ -148,7 +156,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     tokenCount++;
                                     tokenAddress = token.address;
                                     console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
-                                    return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, split: false })];
+                                    return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, split: false, runtime: runtime_1 })];
                                 case 2:
                                     _f = _h.sent(), path = _f[0], amts = _f[1], totalAPIRequest = _f[2];
                                     if (totalAPIRequest === 999) {
