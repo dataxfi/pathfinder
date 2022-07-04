@@ -40,7 +40,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
         const refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON() as unknown as ITokenInfo[];
         delete refetchList["type"];
         delete refetchList["buffer"];
-        if (Object(refetchList).keys().length === 0) {
+        if (Object.keys(refetchList).length === 0) {
           console.log("No tokens to refetch.");
           return;
         }
