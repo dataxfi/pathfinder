@@ -164,7 +164,7 @@ export default class Pathfinder {
     this.totalAPIRequest++;
     const [allTokensResponse, apiRequestCount] = await this.fetchFunction(tokenAddresses, this.split, skipT0, skipT1, callT0, callT1);
 
-    this.totalAPIRequest = apiRequestCount - 1;
+    this.totalAPIRequest = this.totalAPIRequest + apiRequestCount - 1;
 
     for (let i = 0; i < allTokensResponse.length; i++) {
       const response = allTokensResponse[i];
