@@ -12,8 +12,8 @@
     "build": "yarn tsc",
     "prestart": "yarn run build",
     "start": "node public/index.js",
-    "getOceanPaths": "node public/src/path-jobs/getOceanPaths.js",
-    "refetch": "node public/src/path-jobs/getOceanPaths.js true",
+    "getOceanPaths": "node public/src/path-jobs/getTokenPaths.js",
+    "refetch": "node public/src/path-jobs/getTokenPaths.js true",
     "stage-code": "git add public && git add src && git add api && git add .github",
     "stage-paths": "git add storage",
     "test": "yarn jest --detectOpenHandles"
