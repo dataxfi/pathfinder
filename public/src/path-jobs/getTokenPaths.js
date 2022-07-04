@@ -56,7 +56,7 @@ exports.oceanAddresses = {
  */
 function getTokenPaths(chains, destinationAddress, isRefetch) {
     return __awaiter(this, void 0, void 0, function () {
-        var urls, tokenLists, _i, chains_1, chain, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
+        var urls, tokenLists, _i, chains_1, chain, refetchList, tokens, _loop_1, _a, _b, _c, chain, list, error_1;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
@@ -82,7 +82,13 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     chain = chains_1[_i];
                     if (!isRefetch) return [3 /*break*/, 3];
                     console.log("Refetching tokens with split queries for chain: ", chain);
-                    tokenLists[chain] = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON();
+                    refetchList = fs.readFileSync("src/path-jobs/getTokenPaths.ts").toJSON();
+                    delete refetchList["type"];
+                    delete refetchList["buffer"];
+                    if (Object(refetchList).keys().length === 0) {
+                        console.log("No tokens to refetch.");
+                        return [2 /*return*/];
+                    }
                     return [3 /*break*/, 5];
                 case 3:
                     console.log("Getting token list for chain: ", chain);
@@ -113,6 +119,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     existingPathsToOcean_1 = fs.readFileSync(pathToPathsToOcean).toJSON();
                                     tokenCount = 0;
                                     writeToReFetch = function (address) {
+                                        console.log("Writing to reFetch: " + address);
                                         reFetch[chain].push({ address: address });
                                         fs.writeFileSync("storage/reFetch.json", JSON.stringify(reFetch));
                                     };
@@ -152,7 +159,6 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));
                                     }
                                     else {
-                                        console.log("Writing to reFetch: " + path);
                                         writeToReFetch(path);
                                     }
                                     _h.label = 3;
@@ -187,6 +193,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
 }
 exports.getTokenPaths = getTokenPaths;
 // call getTokenPaths for with ocean address and refetch param
+console.log("getTokenPaths.js called with: ", process.argv);
 var isRefetch = JSON.parse(process.argv[process.argv.length - 1]);
 if (!isRefetch)
     isRefetch = false;
