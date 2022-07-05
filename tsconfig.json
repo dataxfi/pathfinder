@@ -19,7 +19,8 @@
     "resolveJsonModule": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "api/**/*.json"
 , "index.ts"  ],
   "exclude": [
     "node_modules",
