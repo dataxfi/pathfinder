@@ -5,12 +5,13 @@ import { notFound, errorHandler } from "./src/errors";
 
 const app = express();
 
+app.use(express.static('public'))
+
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/pathfinder/v2", v2_pathfinder);
 app.use("/api/storage/v2", v2_storage)
-app.use(express.static('public'))
 app.use(notFound);
 app.use(errorHandler);
 

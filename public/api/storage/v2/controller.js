@@ -39,27 +39,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = void 0;
 var errors_1 = require("../../../src/errors");
 var util_1 = require("../../util");
-var pathsFromOcean_json_1 = require("./chain137/pathsFromOcean.json");
-var pathsToOcean_json_1 = require("./chain137/pathsToOcean.json");
-var refetch_json_1 = require("./chain137/refetch.json");
+var path_1 = require("path");
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, chainId, tokenIn, tokenOut, pathData;
     return __generator(this, function (_b) {
         _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
         (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
         pathData = null;
-        if (tokenIn === refetch_json_1.default[chainId]) {
-            pathData = pathsFromOcean_json_1.default[tokenOut];
-        }
-        else {
-            pathData = pathsToOcean_json_1.default[tokenIn];
-        }
+        //   const pathsToOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsFromOcean.json`).toString());
+        //   const pathsFromOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsToOcean.json`).toString());
+        //   const oceanAddresses = JSON.parse(fs.readFileSync(`public/data/oceanAddresses.json`).toString());
+        //   if (tokenIn === oceanAddresses[chainId]) {
+        //     pathData = pathsFromOcean[tokenOut];
+        //   } else {
+        //     pathData = pathsToOcean[tokenIn];
+        //   }
         if (!pathData)
             pathData = null;
-        res.json({
-            status: 200,
-            pathData: pathData,
-        });
+        //   res.json({
+        //     status: 200,
+        //     pathData,
+        //   });
+        res.sendFile('pathsFromOcean.json', { root: path_1.default.join(__dirname, 'public') });
         return [2 /*return*/];
     });
 }); });
