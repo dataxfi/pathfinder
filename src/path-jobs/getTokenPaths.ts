@@ -3,7 +3,9 @@ import { supportedChains, ITokenInfoList, IReFetch } from "../@types";
 import { Pathfinder } from "../pathfinder";
 import * as fs from "fs";
 import * as process from "process";
-import oceanAddresses from '../util/oceanAddresses.json'
+
+const oceanAddresses = JSON.parse(fs.readFileSync(`src/util/oceanAddresses.json`).toString());
+
 /**
  * Given an array of chains, will fetch each chains token list and proceed to find user pathfinder
  * to find token paths to and from ocean for every token in the list.
