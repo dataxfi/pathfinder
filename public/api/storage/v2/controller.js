@@ -39,21 +39,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = void 0;
 var errors_1 = require("../../../src/errors");
 var util_1 = require("../../util");
-var fs = require("fs");
+var pathsFromOcean_json_1 = require("./chain137/pathsFromOcean.json");
+var pathsToOcean_json_1 = require("./chain137/pathsToOcean.json");
+var refetch_json_1 = require("./chain137/refetch.json");
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, pathData, pathsToOcean, pathsFromOcean, oceanAddresses;
+    var _a, chainId, tokenIn, tokenOut, pathData;
     return __generator(this, function (_b) {
         _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
         (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
         pathData = null;
-        pathsToOcean = JSON.parse(fs.readFileSync("public/api/storage/v2/chain".concat(chainId, "/pathsFromOcean.json")).toString());
-        pathsFromOcean = JSON.parse(fs.readFileSync("public/api/storage/v2/chain".concat(chainId, "/pathsToOcean.json")).toString());
-        oceanAddresses = JSON.parse(fs.readFileSync("public/api/storage/v2/oceanAddresses.json").toString());
-        if (tokenIn === oceanAddresses[chainId]) {
-            pathData = pathsFromOcean[tokenOut];
+        if (tokenIn === refetch_json_1.default[chainId]) {
+            pathData = pathsFromOcean_json_1.default[tokenOut];
         }
         else {
-            pathData = pathsToOcean[tokenIn];
+            pathData = pathsToOcean_json_1.default[tokenIn];
         }
         if (!pathData)
             pathData = null;
