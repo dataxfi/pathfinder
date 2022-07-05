@@ -46,9 +46,9 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
         _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
         (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
         pathData = null;
-        pathsToOcean = JSON.parse(fs.readFileSync(".vercel/output/static/data/chain".concat(chainId, "/pathsFromOcean.json")).toString());
-        pathsFromOcean = JSON.parse(fs.readFileSync(".vercel/output/static/data/chain".concat(chainId, "/pathsToOcean.json")).toString());
-        oceanAddresses = JSON.parse(fs.readFileSync(".vercel/output/static/data/oceanAddresses.json").toString());
+        pathsToOcean = JSON.parse(fs.readFileSync("public/api/data/chain".concat(chainId, "/pathsFromOcean.json")).toString());
+        pathsFromOcean = JSON.parse(fs.readFileSync("public/api/data/chain".concat(chainId, "/pathsToOcean.json")).toString());
+        oceanAddresses = JSON.parse(fs.readFileSync("public/api/data/oceanAddresses.json").toString());
         if (tokenIn === oceanAddresses[chainId]) {
             pathData = pathsFromOcean[tokenOut];
         }
