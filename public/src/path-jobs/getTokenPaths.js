@@ -41,7 +41,7 @@ var axios_1 = require("axios");
 var pathfinder_1 = require("../pathfinder");
 var fs = require("fs");
 var process = require("process");
-var oceanAddresses_json_1 = require("../util/oceanAddresses.json");
+var oceanAddresses = JSON.parse(fs.readFileSync("src/util/oceanAddresses.json").toString());
 /**
  * Given an array of chains, will fetch each chains token list and proceed to find user pathfinder
  * to find token paths to and from ocean for every token in the list.
@@ -207,5 +207,5 @@ console.log("getTokenPaths.js called with: ", process.argv);
 var isRefetch;
 if (process.argv.length === 3)
     isRefetch = true;
-getTokenPaths(["137"], oceanAddresses_json_1.default["137"], isRefetch).then(function () { console.log("Done"); });
+getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(function () { console.log("Done"); });
 //# sourceMappingURL=getTokenPaths.js.map

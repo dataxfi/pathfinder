@@ -49,7 +49,6 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
         pathsToOcean = JSON.parse(fs.readFileSync("storage/chain".concat(chainId, "/pathsFromOcean.json")).toString());
         pathsFromOcean = JSON.parse(fs.readFileSync("storage/chain".concat(chainId, "/pathsToOcean.json")).toString());
         oceanAddresses = JSON.parse(fs.readFileSync("src/util/oceanAddresses.json").toString());
-        console.log(pathsFromOcean, pathsToOcean);
         if (tokenIn === oceanAddresses[chainId]) {
             pathData = pathsFromOcean[tokenOut];
         }
