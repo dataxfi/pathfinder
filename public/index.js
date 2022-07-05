@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/pathfinder/v2", api_1.v2_pathfinder);
 app.use("/api/storage/v2", api_1.v2_storage);
+app.use(express.static('public'));
 app.use(errors_1.notFound);
 app.use(errors_1.errorHandler);
 var PORT = process.env.PORT || 8080;
