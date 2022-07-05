@@ -7,9 +7,9 @@ export const post = asyncErrorBoundary(async (req, res) => {
   checkParams(chainId, tokenIn, tokenOut);
   let pathData = null;
 
-  const pathsToOcean = JSON.parse(fs.readFileSync(`public/api/data/chain${chainId}/pathsFromOcean.json`).toString());
-  const pathsFromOcean = JSON.parse(fs.readFileSync(`public/api/data/chain${chainId}/pathsToOcean.json`).toString());
-  const oceanAddresses = JSON.parse(fs.readFileSync(`public/api/data/oceanAddresses.json`).toString());
+  const pathsToOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsFromOcean.json`).toString());
+  const pathsFromOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsToOcean.json`).toString());
+  const oceanAddresses = JSON.parse(fs.readFileSync(`public/data/oceanAddresses.json`).toString());
 
 
   if (tokenIn === oceanAddresses[chainId]) {
