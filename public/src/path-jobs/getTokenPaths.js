@@ -36,19 +36,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTokenPaths = exports.oceanAddresses = void 0;
+exports.getTokenPaths = void 0;
 var axios_1 = require("axios");
 var pathfinder_1 = require("../pathfinder");
 var fs = require("fs");
 var process = require("process");
-exports.oceanAddresses = {
-    "1": "0x967da4048cD07aB37855c090aAF366e4ce1b9F48",
-    "4": "0x8967bcf84170c91b0d24d4302c2376283b0b3a07",
-    "56": "0xdce07662ca8ebc241316a15b611c89711414dd1a",
-    "137": "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-    "246": "0x593122aae80a6fc3183b2ac0c4ab3336debee528",
-    "1285": "0x99C409E5f62E4bd2AC142f17caFb6810B8F0BAAE",
-};
+var oceanAddresses_json_1 = require("../util/oceanAddresses.json");
 /**
  * Given an array of chains, will fetch each chains token list and proceed to find user pathfinder
  * to find token paths to and from ocean for every token in the list.
@@ -214,5 +207,5 @@ console.log("getTokenPaths.js called with: ", process.argv);
 var isRefetch;
 if (process.argv.length === 3)
     isRefetch = true;
-getTokenPaths(["137"], exports.oceanAddresses["137"], isRefetch).then(function () { console.log("Done"); });
+getTokenPaths(["137"], oceanAddresses_json_1.default["137"], isRefetch).then(function () { console.log("Done"); });
 //# sourceMappingURL=getTokenPaths.js.map
