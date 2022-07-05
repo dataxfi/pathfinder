@@ -9,8 +9,6 @@ export const post = asyncErrorBoundary(async (req, res) => {
   checkParams(chainId, tokenIn, tokenOut);
   let pathData = null;
 
-  const oceanAddresses = JSON.parse(fs.readFileSync(`public/api/storage/v2/oceanAddresses.json`).toString());
-
 
   if (tokenIn === oceanAddresses[chainId]) {
     pathData = pathsFromOcean[tokenOut];
