@@ -38,21 +38,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = void 0;
 var errors_1 = require("../../../src/errors");
-var oceanAddresses_json_1 = require("../../../src/util/oceanAddresses.json");
-var pathsFromOcean_json_1 = require("../../../storage/chain137/pathsFromOcean.json");
-var pathsToOcean_json_1 = require("../../../storage/chain137/pathsToOcean.json");
 var util_1 = require("../../util");
+var fs = require("fs");
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, pathData;
+    var _a, chainId, tokenIn, tokenOut, pathData, pathsToOcean, pathsFromOcean, oceanAddresses;
     return __generator(this, function (_b) {
         _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
         (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
         pathData = null;
-        if (tokenIn === oceanAddresses_json_1.default[chainId]) {
-            pathData = pathsFromOcean_json_1.default[tokenOut];
+        pathsToOcean = JSON.parse(fs.readFileSync("storage/chain".concat(chainId, "/pathsFromOcean.json")).toString());
+        pathsFromOcean = JSON.parse(fs.readFileSync("storage/chain".concat(chainId, "/pathsToOcean.json")).toString());
+        oceanAddresses = JSON.parse(fs.readFileSync("src/util/oceanAddresses.json").toString());
+        console.log(pathsFromOcean, pathsToOcean);
+        if (tokenIn === oceanAddresses[chainId]) {
+            pathData = pathsFromOcean[tokenOut];
         }
         else {
-            pathData = pathsToOcean_json_1.default[tokenIn];
+            pathData = pathsToOcean[tokenIn];
         }
         if (!pathData)
             pathData = null;
