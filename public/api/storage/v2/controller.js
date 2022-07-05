@@ -39,28 +39,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = void 0;
 var errors_1 = require("../../../src/errors");
 var util_1 = require("../../util");
-var fs = require("fs");
+var path_1 = require("path");
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, pathData, pathsToOcean, pathsFromOcean, oceanAddresses;
+    var _a, chainId, tokenIn, tokenOut, pathData;
     return __generator(this, function (_b) {
         _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
         (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
         pathData = null;
-        pathsToOcean = JSON.parse(fs.readFileSync("public/data/chain".concat(chainId, "/pathsFromOcean.json")).toString());
-        pathsFromOcean = JSON.parse(fs.readFileSync("public/data/chain".concat(chainId, "/pathsToOcean.json")).toString());
-        oceanAddresses = JSON.parse(fs.readFileSync("public/data/oceanAddresses.json").toString());
-        if (tokenIn === oceanAddresses[chainId]) {
-            pathData = pathsFromOcean[tokenOut];
-        }
-        else {
-            pathData = pathsToOcean[tokenIn];
-        }
+        //   const pathsToOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsFromOcean.json`).toString());
+        //   const pathsFromOcean = JSON.parse(fs.readFileSync(`public/data/chain${chainId}/pathsToOcean.json`).toString());
+        //   const oceanAddresses = JSON.parse(fs.readFileSync(`public/data/oceanAddresses.json`).toString());
+        //   if (tokenIn === oceanAddresses[chainId]) {
+        //     pathData = pathsFromOcean[tokenOut];
+        //   } else {
+        //     pathData = pathsToOcean[tokenIn];
+        //   }
         if (!pathData)
             pathData = null;
-        res.json({
-            status: 200,
-            pathData: pathData,
-        });
+        //   res.json({
+        //     status: 200,
+        //     pathData,
+        //   });
+        res.sendFile('index.html', { root: path_1.default.join(__dirname, 'public') });
         return [2 /*return*/];
     });
 }); });
