@@ -7,7 +7,7 @@ var errors_1 = require("./src/errors");
 var app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/pathfinder/v2", router_1.v2_router);
+app.use("/api/pathfinder/v2", router_1.v2_pathfinder);
 app.use(errors_1.notFound);
 app.use(errors_1.errorHandler);
 var PORT = process.env.PORT || 8080;
