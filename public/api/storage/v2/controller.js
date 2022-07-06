@@ -121,7 +121,7 @@ exports.getRefetchTokens = (0, errors_1.asyncErrorBoundary)(function (req, res) 
                 pathData = _a.sent();
                 res.json({
                     status: 200,
-                    paths: pathData || null,
+                    tokens: pathData || null,
                 });
                 return [2 /*return*/];
         }
