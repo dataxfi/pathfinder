@@ -110,7 +110,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                         }, 60000);
                     }
                     _loop_1 = function (chain, list) {
-                        var maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean_1, existingPathsToOcean_1, tokenCount, writeToReFetch, addItem, removeUnusedData, _e, list_1, token, tokenAddress, _f, path, amts, totalAPIRequest;
+                        var maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean_1, existingPathsToOcean_1, tokenCount, writeToReFetch, addItem, removeUnusedData, _e, list_1, token, tokenAddress, _f, path, amts, totalAPIRequest, reversePath, reverseAmts;
                         var _g;
                         return __generator(this, function (_h) {
                             switch (_h.label) {
@@ -161,6 +161,9 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                         addItem("apiRequestCount", totalAPIRequest);
                                         addItem("pathCount", Object.keys(existingPathFromOcean_1).length);
                                         existingPathsToOcean_1[tokenAddress] = { path: path, amts: amts };
+                                        reversePath = path.reverse();
+                                        reverseAmts = amts.reverse();
+                                        console.log(reversePath, reverseAmts);
                                         existingPathFromOcean_1[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
                                         removeUnusedData();
                                         fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean_1));

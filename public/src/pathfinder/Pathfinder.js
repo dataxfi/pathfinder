@@ -321,15 +321,15 @@ var Pathfinder = /** @class */ (function () {
     return Pathfinder;
 }());
 exports.default = Pathfinder;
-// const pathfinder = new Pathfinder("137", 1500000000);
-// pathfinder
-//   .getTokenPath({
-//     tokenAddress: "0x56A0eFEFC9F1FBb54FBd25629Ac2aA764F1b56F7",
-//     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//     split: true,
-//   })
-//   .then((r) => console.log("response", r))
-//   .catch(console.error);
+var pathfinder = new Pathfinder("137", 1500000000);
+pathfinder
+    .getTokenPath({
+    tokenAddress: "0x9Bd9aD490dD3a52f096D229af4483b94D63BE618",
+    destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+    split: true,
+})
+    .then(function (r) { return console.log("response", r); })
+    .catch(console.error);
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
 // //1. if there are more pools for the token then more data needs to be fetched and searched.
