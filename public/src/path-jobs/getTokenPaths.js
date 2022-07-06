@@ -163,8 +163,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                         existingPathsToOcean_1[tokenAddress] = { path: path, amts: amts };
                                         reversePath = path.reverse();
                                         reverseAmts = amts.reverse();
-                                        console.log(reversePath, reverseAmts);
-                                        existingPathFromOcean_1[tokenAddress] = Array.isArray(path) ? { path: path.reverse(), amts: amts.reverse() } : null;
+                                        existingPathFromOcean_1[tokenAddress] = { path: reversePath, amts: reverseAmts };
                                         removeUnusedData();
                                         fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean_1));
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));

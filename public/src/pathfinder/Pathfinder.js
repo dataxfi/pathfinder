@@ -324,7 +324,7 @@ exports.default = Pathfinder;
 var pathfinder = new Pathfinder("137", 1500000000);
 pathfinder
     .getTokenPath({
-    tokenAddress: "0x9Bd9aD490dD3a52f096D229af4483b94D63BE618",
+    tokenAddress: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
     destinationAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
     split: true,
 })
