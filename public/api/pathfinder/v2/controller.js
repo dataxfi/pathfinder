@@ -36,12 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.get = exports.post = void 0;
+exports.post = void 0;
 var errors_1 = require("../../../src/errors");
 var pathfinder_1 = require("../../../src/pathfinder");
-var pathsFromOcean_json_1 = require("../../../storage/chain137/pathsFromOcean.json");
-var pathsToOcean_json_1 = require("../../../storage/chain137/pathsToOcean.json");
-var oceanAddresses_json_1 = require("../../../src/util/oceanAddresses.json");
 var util_1 = require("../../util");
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, chainId, tokenIn, tokenOut, pathfinder, path;
@@ -72,27 +69,6 @@ exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __a
                 }
                 return [2 /*return*/];
         }
-    });
-}); });
-exports.get = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, pathData;
-    return __generator(this, function (_b) {
-        _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
-        (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
-        pathData = null;
-        if (tokenIn === oceanAddresses_json_1.default[chainId]) {
-            pathData = pathsFromOcean_json_1.default[tokenOut];
-        }
-        else {
-            pathData = pathsToOcean_json_1.default[tokenIn];
-        }
-        if (!pathData)
-            pathData = null;
-        res.json({
-            status: 200,
-            pathData: pathData,
-        });
-        return [2 /*return*/];
     });
 }); });
 //# sourceMappingURL=controller.js.map

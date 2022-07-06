@@ -36,32 +36,95 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.post = void 0;
+exports.getRefetchTokens = exports.getPathsFromOcean = exports.getPathsToOcean = exports.post = void 0;
 var errors_1 = require("../../../src/errors");
 var util_1 = require("../../util");
-var fs = require("fs");
+var axios_1 = require("axios");
+var getPaths = function (link) { return __awaiter(void 0, void 0, void 0, function () {
+    var pathResponse;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, axios_1.default.get(link)];
+            case 1:
+                pathResponse = _a.sent();
+                return [2 /*return*/, pathResponse.data];
+        }
+    });
+}); };
+var pathsToOceanLink = "https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/chain137/pathsToOcean.json";
+var pathsFromOceanLink = "https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/chain137/pathsFromOcean.json";
 exports.post = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, chainId, tokenIn, tokenOut, pathData, pathsToOcean, pathsFromOcean, oceanAddresses;
+    var _a, chainId, tokenIn, tokenOut, path, paths, paths;
     return __generator(this, function (_b) {
-        _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
-        (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
-        pathData = null;
-        pathsToOcean = JSON.parse(fs.readFileSync("public/chain".concat(chainId, "/pathsFromOcean.json")).toString());
-        pathsFromOcean = JSON.parse(fs.readFileSync("public/chain".concat(chainId, "/pathsToOcean.json")).toString());
-        oceanAddresses = JSON.parse(fs.readFileSync("public/oceanAddresses.json").toString());
-        if (tokenIn === oceanAddresses[chainId]) {
-            pathData = pathsFromOcean[tokenOut];
+        switch (_b.label) {
+            case 0:
+                _a = req.body, chainId = _a.chainId, tokenIn = _a.tokenIn, tokenOut = _a.tokenOut;
+                (0, util_1.checkParams)(chainId, tokenIn, tokenOut);
+                path = null;
+                if (!(tokenIn === util_1.oceanAddresses[chainId])) return [3 /*break*/, 2];
+                return [4 /*yield*/, getPaths(pathsFromOceanLink)];
+            case 1:
+                paths = _b.sent();
+                path = paths[tokenOut];
+                return [3 /*break*/, 4];
+            case 2: return [4 /*yield*/, getPaths(pathsToOceanLink)];
+            case 3:
+                paths = _b.sent();
+                path = paths[tokenIn];
+                _b.label = 4;
+            case 4:
+                console.log(path);
+                res.json({
+                    status: 200,
+                    path: path || null,
+                });
+                return [2 /*return*/];
         }
-        else {
-            pathData = pathsToOcean[tokenIn];
+    });
+}); });
+exports.getPathsToOcean = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var pathData;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, getPaths(pathsToOceanLink)];
+            case 1:
+                pathData = _a.sent();
+                res.json({
+                    status: 200,
+                    paths: pathData || null,
+                });
+                return [2 /*return*/];
         }
-        if (!pathData)
-            pathData = null;
-        res.json({
-            status: 200,
-            pathData: pathData,
-        });
-        return [2 /*return*/];
+    });
+}); });
+exports.getPathsFromOcean = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var pathData;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, getPaths(pathsFromOceanLink)];
+            case 1:
+                pathData = _a.sent();
+                res.json({
+                    status: 200,
+                    paths: pathData || null,
+                });
+                return [2 /*return*/];
+        }
+    });
+}); });
+exports.getRefetchTokens = (0, errors_1.asyncErrorBoundary)(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var pathData;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, getPaths("https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/reFetch.json")];
+            case 1:
+                pathData = _a.sent();
+                res.json({
+                    status: 200,
+                    paths: pathData || null,
+                });
+                return [2 /*return*/];
+        }
     });
 }); });
 //# sourceMappingURL=controller.js.map

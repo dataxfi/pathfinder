@@ -4,11 +4,10 @@ import axios from "axios";
 
 const getPaths = async (link: string) => {
   const pathResponse = await axios.get(link);
-  console.log();
   return pathResponse.data;
 };
-const pathsToOceanLink = "https://github.com/dataxfi/pathfinder/blob/main/storage/chain137/pathsToOcean.json";
-const pathsFromOceanLink = "https://github.com/dataxfi/pathfinder/blob/main/storage/chain137/pathsFromOcean.json";
+const pathsToOceanLink = "https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/chain137/pathsToOcean.json";
+const pathsFromOceanLink = "https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/chain137/pathsFromOcean.json";
 
 export const post = asyncErrorBoundary(async (req, res) => {
   const { chainId, tokenIn, tokenOut } = req.body;
@@ -23,9 +22,10 @@ export const post = asyncErrorBoundary(async (req, res) => {
     path = paths[tokenIn];
   }
 
+  console.log(path);
   res.json({
     status: 200,
-    path,
+    path: path || null,
   });
 });
 
@@ -33,7 +33,7 @@ export const getPathsToOcean = asyncErrorBoundary(async (req, res) => {
   const pathData = await getPaths(pathsToOceanLink);
   res.json({
     status: 200,
-    paths: pathData.data,
+    paths: pathData || null,
   });
 });
 
@@ -41,7 +41,14 @@ export const getPathsFromOcean = asyncErrorBoundary(async (req, res) => {
   const pathData = await getPaths(pathsFromOceanLink);
   res.json({
     status: 200,
-    paths: pathData.data,
+    paths: pathData || null,
   });
 });
-// await axios.get('https://github.com/dataxfi/pathfinder/blob/main/storage/reFetch.json');
+
+export const getRefetchTokens = asyncErrorBoundary(async (req, res) => {
+  const pathData = await getPaths("https://raw.githubusercontent.com/dataxfi/pathfinder/main/storage/reFetch.json");
+  res.json({
+    status: 200,
+    tokens: pathData || null,
+  });
+});
