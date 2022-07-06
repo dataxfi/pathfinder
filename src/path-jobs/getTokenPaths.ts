@@ -117,10 +117,10 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
           } else if (Array.isArray(path) && Array.isArray(amts)) {
             addItem("apiRequestCount", totalAPIRequest);
             addItem("pathCount", Object.keys(existingPathFromOcean).length);
-            existingPathsToOcean[tokenAddress] = { path, amts };
+            existingPathsToOcean[tokenAddress.toLowerCase()] = { path, amts };
             const reversePath = path.reverse()
             const reverseAmts = amts.reverse()
-            existingPathFromOcean[tokenAddress] = {path:reversePath, amts: reverseAmts };
+            existingPathFromOcean[tokenAddress.toLowerCase()] = {path:reversePath, amts: reverseAmts };
             removeUnusedData();
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
