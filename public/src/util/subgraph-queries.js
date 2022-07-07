@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uniswapV3Query = exports.uniswapV2Query = void 0;
 var v2ReqFields = "orderBy:reserveUSD\n  orderDirection:desc){\n      id\n    token1{\n      id\n    }\n    token0{\n      id\n    }\n\n    totalValueLockedToken0:reserve0\n    totalValueLockedToken1:reserve1\n  }";
 function v2GeneralReq(address, callT0, callT1) {
-    var t0Match = "t0IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token0_contains:\"").concat(address, "\", reserveUSD_gt:\"100\"}\n  ").concat(v2ReqFields);
-    var t1Match = "t1IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token1_contains:\"").concat(address, "\", reserveUSD_gt:\"100\"}\n  ").concat(v2ReqFields);
+    var t0Match = "t0IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token0_contains:\"").concat(address, "\", reserveUSD_gt:\"1000\"}\n  ").concat(v2ReqFields);
+    var t1Match = "t1IsMatch".concat(address, ": pairs(first:1000 skip:0 where:{token1_contains:\"").concat(address, "\", reserveUSD_gt:\"1000\"}\n  ").concat(v2ReqFields);
     return "\n  ".concat(callT0 ? t0Match : "", "\n  ").concat(callT1 ? t1Match : "", "\n  ");
 }
 function splitQueryList(addresses) {
