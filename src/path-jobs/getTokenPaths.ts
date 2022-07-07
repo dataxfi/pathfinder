@@ -30,7 +30,7 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
     for (const chain of chains) {
       if (isRefetch) {
         console.log("Refetching tokens with split queries for chain: ", chain);
-        const refetchList = JSON.parse(fs.readFileSync(`storage/chain${chain}/refetch.json`).toString()) as unknown as ITokenInfoList;
+        const refetchList = JSON.parse(fs.readFileSync(`storage/refetch.json`).toString()) as unknown as ITokenInfoList;
 
         delete refetchList["type"];
         delete refetchList["data"];

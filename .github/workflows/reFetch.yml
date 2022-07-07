@@ -1,8 +1,8 @@
 ##  RUN JOB TO GET FAILED TOKEN PATHS
 
-on: push
-  # schedule:
-  # - cron: "* */6 * * *"
+on:
+  schedule:
+  - cron: "1 */5 * * *"
 
 jobs:
   build:

@@ -75,7 +75,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     chain = chains_1[_i];
                     if (!isRefetch) return [3 /*break*/, 3];
                     console.log("Refetching tokens with split queries for chain: ", chain);
-                    refetchList = JSON.parse(fs.readFileSync("storage/chain".concat(chain, "/refetch.json")).toString());
+                    refetchList = JSON.parse(fs.readFileSync("storage/refetch.json").toString());
                     delete refetchList["type"];
                     delete refetchList["data"];
                     refetchTokenAmt = refetchList[chain].length;
@@ -160,10 +160,10 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     else if (Array.isArray(path) && Array.isArray(amts)) {
                                         addItem("apiRequestCount", totalAPIRequest);
                                         addItem("pathCount", Object.keys(existingPathFromOcean_1).length);
-                                        existingPathsToOcean_1[tokenAddress] = { path: path, amts: amts };
+                                        existingPathsToOcean_1[tokenAddress.toLowerCase()] = { path: path, amts: amts };
                                         reversePath = path.reverse();
                                         reverseAmts = amts.reverse();
-                                        existingPathFromOcean_1[tokenAddress] = { path: reversePath, amts: reverseAmts };
+                                        existingPathFromOcean_1[tokenAddress.toLowerCase()] = { path: reversePath, amts: reverseAmts };
                                         removeUnusedData();
                                         fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean_1));
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));
