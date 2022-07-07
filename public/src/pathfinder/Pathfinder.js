@@ -47,7 +47,6 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var util_1 = require("../util");
 var bignumber_js_1 = require("bignumber.js");
-var fs = require("fs");
 bignumber_js_1.default.config({ DECIMAL_PLACES: 50 });
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
@@ -323,16 +322,16 @@ var Pathfinder = /** @class */ (function () {
 }());
 exports.default = Pathfinder;
 var pathfinder = new Pathfinder("137", 1500000000);
-pathfinder
-    .getTokenPath({
-    tokenAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-    destinationAddress: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-    split: true,
-})
-    .then(function (r) {
-    fs.writeFileSync("newPath.txt", r.toString());
-})
-    .catch(console.error);
+// pathfinder
+//   .getTokenPath({
+//     tokenAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
+//     destinationAddress: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+//     split: true,
+//   })
+//   .then((r) => {
+//     fs.writeFileSync("newPath.txt", r.toString())
+//   })
+//   .catch(console.error);
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
 // //1. if there are more pools for the token then more data needs to be fetched and searched.
