@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -111,9 +122,9 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                     }
                     _loop_1 = function (chain, list) {
                         var maxQueryTime, reFetch, pathfinder, pathToPathsFromOcean, pathToPathsToOcean, existingPathFromOcean_1, existingPathsToOcean_1, tokenCount, writeToReFetch, addItem, removeUnusedData, _e, list_1, token, tokenAddress, _f, path, amts, totalAPIRequest, reversePath, reverseAmts;
-                        var _g;
-                        return __generator(this, function (_h) {
-                            switch (_h.label) {
+                        var _g, _h, _j;
+                        return __generator(this, function (_k) {
+                            switch (_k.label) {
                                 case 0:
                                     console.log("On chain" + chain + ", list:", list);
                                     maxQueryTime = isRefetch ? 18000000 : (20000 / list.length) * 1000;
@@ -143,7 +154,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     };
                                     addItem("listCount", list.length);
                                     _e = 0, list_1 = list;
-                                    _h.label = 1;
+                                    _k.label = 1;
                                 case 1:
                                     if (!(_e < list_1.length)) return [3 /*break*/, 4];
                                     token = list_1[_e];
@@ -152,18 +163,20 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
                                     return [4 /*yield*/, pathfinder.getTokenPath({ tokenAddress: tokenAddress, destinationAddress: destinationAddress, split: false, runtime: runtime_1 })];
                                 case 2:
-                                    _f = _h.sent(), path = _f[0], amts = _f[1], totalAPIRequest = _f[2];
+                                    _f = _k.sent(), path = _f[0], amts = _f[1], totalAPIRequest = _f[2];
+                                    console.log(path);
                                     if (totalAPIRequest === 999) {
                                         // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
                                         writeToReFetch(path);
                                     }
                                     else if (Array.isArray(path) && Array.isArray(amts)) {
+                                        existingPathsToOcean_1 = __assign(__assign({}, existingPathsToOcean_1), (_h = {}, _h[tokenAddress.toLowerCase()] = { path: path, amts: amts }, _h));
                                         addItem("apiRequestCount", totalAPIRequest);
                                         addItem("pathCount", Object.keys(existingPathFromOcean_1).length);
-                                        existingPathsToOcean_1[tokenAddress.toLowerCase()] = { path: path, amts: amts };
-                                        reversePath = path.reverse();
-                                        reverseAmts = amts.reverse();
-                                        existingPathFromOcean_1[tokenAddress.toLowerCase()] = { path: reversePath, amts: reverseAmts };
+                                        reversePath = path.slice().reverse();
+                                        reverseAmts = amts.slice().reverse();
+                                        console.log(path, reversePath);
+                                        existingPathFromOcean_1 = __assign(__assign({}, existingPathFromOcean_1), (_j = {}, _j[tokenAddress.toLowerCase()] = { path: reversePath, amts: reverseAmts }, _j));
                                         removeUnusedData();
                                         fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean_1));
                                         fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean_1));
@@ -171,7 +184,7 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
                                     else {
                                         writeToReFetch(path);
                                     }
-                                    _h.label = 3;
+                                    _k.label = 3;
                                 case 3:
                                     _e++;
                                     return [3 /*break*/, 1];
@@ -204,10 +217,12 @@ function getTokenPaths(chains, destinationAddress, isRefetch) {
     });
 }
 exports.getTokenPaths = getTokenPaths;
-// call getTokenPaths for with ocean address and refetch param
+// call getTokenPaths with ocean address and refetch param
 console.log("getTokenPaths.js called with: ", process.argv);
 var isRefetch;
 if (process.argv.length === 3)
     isRefetch = true;
-getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(function () { console.log("Done"); });
+getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(function () {
+    console.log("Done");
+});
 //# sourceMappingURL=getTokenPaths.js.map

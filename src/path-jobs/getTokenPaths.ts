@@ -81,8 +81,8 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
         const pathfinder = new Pathfinder(chain as supportedChains, maxQueryTime);
         const pathToPathsFromOcean = `storage/chain${chain}/pathsFromOcean.json`;
         const pathToPathsToOcean = `storage/chain${chain}/pathsToOcean.json`;
-        const existingPathFromOcean = fs.readFileSync(pathToPathsFromOcean).toJSON();
-        const existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
+        let existingPathFromOcean = fs.readFileSync(pathToPathsFromOcean).toJSON();
+        let existingPathsToOcean = fs.readFileSync(pathToPathsToOcean).toJSON();
         let tokenCount = 0;
 
         const writeToReFetch = (address) => {
@@ -111,16 +111,18 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
 
           console.log("Finding path for: " + tokenAddress, " " + tokenCount + " of " + list.length);
           const [path, amts, totalAPIRequest] = await pathfinder.getTokenPath({ tokenAddress, destinationAddress, split: false, runtime });
+          console.log(path);
           if (totalAPIRequest === 999) {
             // max api request for github action is 1000, so add token tokens to reFetch and try again in an hour
             writeToReFetch(path);
           } else if (Array.isArray(path) && Array.isArray(amts)) {
+            existingPathsToOcean = { ...existingPathsToOcean, [tokenAddress.toLowerCase()]: { path, amts } };
             addItem("apiRequestCount", totalAPIRequest);
             addItem("pathCount", Object.keys(existingPathFromOcean).length);
-            existingPathsToOcean[tokenAddress.toLowerCase()] = { path, amts };
-            const reversePath = path.reverse()
-            const reverseAmts = amts.reverse()
-            existingPathFromOcean[tokenAddress.toLowerCase()] = {path:reversePath, amts: reverseAmts };
+            const reversePath = path.slice().reverse();
+            const reverseAmts = amts.slice().reverse();
+            console.log(path, reversePath);
+            existingPathFromOcean = { ...existingPathFromOcean, [tokenAddress.toLowerCase()]: { path: reversePath, amts: reverseAmts } };
             removeUnusedData();
             fs.writeFileSync(pathToPathsFromOcean, JSON.stringify(existingPathFromOcean));
             fs.writeFileSync(pathToPathsToOcean, JSON.stringify(existingPathsToOcean));
@@ -138,8 +140,10 @@ export async function getTokenPaths(chains: supportedChains[], destinationAddres
   }
 }
 
-// call getTokenPaths for with ocean address and refetch param
+// call getTokenPaths with ocean address and refetch param
 console.log("getTokenPaths.js called with: ", process.argv);
 let isRefetch;
 if (process.argv.length === 3) isRefetch = true;
-getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(()=>{console.log("Done")});
+getTokenPaths(["137"], oceanAddresses["137"], isRefetch).then(() => {
+  console.log("Done");
+});
