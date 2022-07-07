@@ -13,10 +13,10 @@ const v2ReqFields = `orderBy:reserveUSD
   }`;
 
 function v2GeneralReq(address: string, callT0: boolean, callT1: boolean) {
-  const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:0 where:{token0_contains:"${address}", reserveUSD_gt:"100"}
+  const t0Match = `t0IsMatch${address}: pairs(first:1000 skip:0 where:{token0_contains:"${address}", reserveUSD_gt:"1000"}
   ${v2ReqFields}`;
 
-  const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:0 where:{token1_contains:"${address}", reserveUSD_gt:"100"}
+  const t1Match = `t1IsMatch${address}: pairs(first:1000 skip:0 where:{token1_contains:"${address}", reserveUSD_gt:"1000"}
   ${v2ReqFields}`;
 
   return `
