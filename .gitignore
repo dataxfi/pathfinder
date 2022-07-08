@@ -1,6 +1,6 @@
 dist
 node_modules
-src/reverse.js
+src/util/reverse.js
 newPathsToOcean.json
 pathsToOcean.json
 pathsFromOcean.json

@@ -46,7 +46,9 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var util_1 = require("../util");
+var util_2 = require("../../api/util");
 var bignumber_js_1 = require("bignumber.js");
+var fs = require("fs");
 bignumber_js_1.default.config({ DECIMAL_PLACES: 50 });
 // bscPools, energywebPools, moonriverPools, rinkebyPools ,
 // import fs from "fs";
@@ -59,6 +61,7 @@ var Pathfinder = /** @class */ (function () {
         this.maxQueryTime = 15;
         this.initialQueryParams = { skipT0: [0], skipT1: [0], callT0: [true], callT1: [true] };
         this.split = false;
+        this.addOcean = "back";
         this.nodes = {};
         this.tokensChecked = new Set();
         this.userTokenIn = "";
@@ -262,6 +265,14 @@ var Pathfinder = /** @class */ (function () {
                                 this.tokensChecked = new Set();
                                 tokenAddress = tokenAddress.toLowerCase();
                                 destinationAddress = destinationAddress.toLowerCase();
+                                if (destinationAddress === util_2.oceanAddresses[this.chainId].toLowerCase()) {
+                                    destinationAddress = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+                                    this.addOcean = "back";
+                                }
+                                else if (tokenAddress === util_2.oceanAddresses[this.chainId].toLowerCase()) {
+                                    tokenAddress = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+                                    this.addOcean = "front";
+                                }
                                 this.userTokenIn = tokenAddress;
                                 this.userTokenOut = destinationAddress;
                                 if (tokenAddress === destinationAddress) {
@@ -278,6 +289,7 @@ var Pathfinder = /** @class */ (function () {
                                 _b.sent();
                                 if (this.nodes[destinationAddress]) {
                                     _a = this.constructPath({ destination: this.userTokenOut }), path_1 = _a[0], amts = _a[1];
+                                    this.addOcean === "back" ? path_1.push(util_2.oceanAddresses[this.chainId]) : path_1.unshift(util_2.oceanAddresses[this.chainId]);
                                     console.log("Total API requests: ", this.totalAPIRequest);
                                     return [2 /*return*/, resolve([path_1, amts, this.totalAPIRequest])];
                                 }
@@ -322,16 +334,16 @@ var Pathfinder = /** @class */ (function () {
 }());
 exports.default = Pathfinder;
 var pathfinder = new Pathfinder("137", 1500000000);
-// pathfinder
-//   .getTokenPath({
-//     tokenAddress: "0x282d8efCe846A88B159800bd4130ad77443Fa1A1",
-//     destinationAddress: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-//     split: true,
-//   })
-//   .then((r) => {
-//     fs.writeFileSync("newPath.txt", r.toString())
-//   })
-//   .catch(console.error);
+pathfinder
+    .getTokenPath({
+    tokenAddress: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+    destinationAddress: util_2.oceanAddresses["137"],
+    split: true,
+})
+    .then(function (r) {
+    fs.writeFileSync("newPath.txt", r.toString());
+})
+    .catch(console.error);
 // console.log("Response from search data: ", nextTokensToSearch);
 // three things need to happen at this point if the destination address was not found
 // //1. if there are more pools for the token then more data needs to be fetched and searched.
